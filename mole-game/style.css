@@ -39,3 +39,10 @@ body {
     padding: 5px 10px;
     border-radius: 5px;
 }
+
+#timer { position: absolute; top: 50px; right: 20px; 
+font-size: 24px;
+    font-weight: 600;
+    color: #fdfdfd;
+  
+}
