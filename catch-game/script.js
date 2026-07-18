@@ -37,7 +37,7 @@ window.addEventListener('mousemove', (e) => {
 let lastSpawnTime = 0;
 function manageSpawning(currentTime) {
     const elapsed = (Date.now() - startTime) / 1000;
-    const diff = 1 + (elapsed / 60) * 2; 
+    const diff = Math.min(3, 1 + elapsed / 240);
     
     const spawnInterval = 1000 / diff;
 
