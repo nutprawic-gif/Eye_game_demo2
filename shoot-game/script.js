@@ -17,19 +17,28 @@ let lastTime = Date.now();
 
 class Target {
     constructor(type) {
-        this.type = type; 
+        this.type = type;
         this.radius = Math.random() * (35 - 20) + 20;
+
+        let speedBase = 6.0;
+
+        if (type === 'bad') {
+            speedBase = 14.0;
+        }
+
         this.x = Math.random() * (canvas.width - this.radius * 2) + this.radius;
         this.y = Math.random() * (canvas.height - this.radius * 2) + this.radius;
-        this.vx = (Math.random() - 0.5) * (score / 200 + 3);
-        this.vy = (Math.random() - 0.5) * (score / 200 + 3);
-        this.color = type === 'good' ? '#33ff33' : '#ff3333';
-        this.life = Math.random() * 2 + 3; 
+
+        this.vx = (Math.random() - 0.5) * speedBase;
+        this.vy = (Math.random() - 0.5) * speedBase;
+
+        this.color = (type === 'good') ? '#33ff33' : '#ff3333';
+        this.life = Math.random() * 2 + 3;
     }
 
     update(dt) {
-        this.x += this.vx;
-        this.y += this.vy;
+        this.x += this.vx * dt * 45;
+        this.y += this.vy * dt * 45;
         this.life -= dt;
 
         if (this.x - this.radius < 0 || this.x + this.radius > canvas.width) this.vx *= -1;
@@ -45,7 +54,7 @@ class Target {
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 2;
         ctx.stroke();
-        
+
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius * 0.6, 0, Math.PI * 2);
         ctx.stroke();
