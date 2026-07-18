@@ -3,6 +3,7 @@ const hitsDisplay = document.getElementById('hits');
 const livesDisplay = document.getElementById('lives');
 const overlay = document.getElementById('overlay');
 const statusMsg = document.getElementById('status-msg');
+const timerDisplay = document.getElementById('timer');
 
 let hits = 0;
 let mistakes = 0;
@@ -11,10 +12,30 @@ let spawnChance = 0.05;
 let gameInterval;
 let baseLightness = 50;
 let contrastGap = 30;
+let gameDuration = 10 * 60; // 10 นาที (วินาที)
+let timeLeft = gameDuration;
+let countdownInterval;
 
 function init() {
+    timerDisplay.innerText = "10:00";
+
     gameInterval = setInterval(checkAllHoles, 3000);
+
+    countdownInterval = setInterval(() => {
+        timeLeft--;
+
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+
+        timerDisplay.innerText =
+            `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+        if (timeLeft <= 0) {
+            endGame("TIME UP!");
+        }
+    }, 1000);
 }
+
 
 function checkAllHoles() {
     if (isGameOver) return;
@@ -81,9 +102,9 @@ function handleWhack() {
 
     mole.remove();
 
-    if (hits >= 20) {
-        endGame("YOU WIN!");
-    }
+    //if (hits >= 20) {
+    //    endGame("YOU WIN!");
+   // }
 }
 
 function updateLives() {
@@ -92,9 +113,13 @@ function updateLives() {
 
 function endGame(msg) {
     isGameOver = true;
+
     clearInterval(gameInterval);
+    clearInterval(countdownInterval);
+
     statusMsg.innerText = msg;
     overlay.style.display = 'flex';
+
     setTimeout(() => {
         window.location.href = "../index.html";
     }, 3000);
