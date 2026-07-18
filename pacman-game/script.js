@@ -11,6 +11,7 @@ let startTime = Date.now();
 let gameDuration = 10 * 60;
 let pellets = [];
 let tileSize, centerX, centerY;
+let respawnInterval = 8000; // 5 วินาที
 
 const map = [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -80,6 +81,15 @@ function isWall(x, y) {
     return map[gy][gx] === 1;
 }
 
+function respawnPellets() {
+    if (isGameOver) return;
+
+    pellets.forEach(p => {
+        if (p.collected && Math.random() < 0.4) {
+            p.collected = false;
+        }
+    });
+}
 function update() {
     if (isGameOver) return;
 
@@ -209,3 +219,4 @@ function loop() {
 init();
 window.addEventListener('resize', init);
 requestAnimationFrame(loop);
+setInterval(respawnPellets, respawnInterval);
