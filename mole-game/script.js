@@ -4,125 +4,191 @@ const livesDisplay = document.getElementById('lives');
 const overlay = document.getElementById('overlay');
 const statusMsg = document.getElementById('status-msg');
 const timerDisplay = document.getElementById('timer');
+const levelDisplay = document.getElementById('level');
 
 let hits = 0;
 let mistakes = 0;
 let isGameOver = false;
-let spawnChance = 0.05;
+
 let gameInterval;
-let baseLightness = 50;
-let contrastGap = 30;
-let gameDuration = 10 * 60; // 10 นาที (วินาที)
-let timeLeft = gameDuration;
 let countdownInterval;
 
+let gameDuration = 10 * 60;
+let timeLeft = gameDuration;
+
+// Difficulty
+let spawnInterval = 3000;
+let moleLifetime = 3000;
+let contrastGap = 35;
+let baseLightness = 50;
+
 function init() {
+
+    hitsDisplay.innerText = hits;
+    updateLives();
     timerDisplay.innerText = "10:00";
 
-    gameInterval = setInterval(checkAllHoles, 3000);
+    updateDifficulty();
 
     countdownInterval = setInterval(() => {
+
         timeLeft--;
 
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
 
         timerDisplay.innerText =
-            `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            `${minutes}:${seconds.toString().padStart(2,'0')}`;
 
         if (timeLeft <= 0) {
             endGame("TIME UP!");
         }
-    }, 1000);
+
+    },1000);
+
 }
 
+function updateDifficulty(){
 
-function checkAllHoles() {
-    if (isGameOver) return;
-    holes.forEach(hole => {
-        if (!hole.querySelector('.mole') && Math.random() < spawnChance) {
+    spawnInterval = Math.max(700,3000-hits*40);
+
+    moleLifetime = Math.max(700,3000-hits*25);
+
+    contrastGap = Math.max(5,35-hits*0.5);
+
+    clearInterval(gameInterval);
+
+    gameInterval = setInterval(checkAllHoles,spawnInterval);
+
+    const level = Math.floor(hits/10)+1;
+
+    levelDisplay.innerText = "Level " + level;
+
+}
+
+function checkAllHoles(){
+
+    if(isGameOver) return;
+
+    holes.forEach(hole=>{
+
+        if(!hole.querySelector(".mole") && Math.random()<0.45){
+
             createMoleInHole(hole);
+
         }
+
     });
-    spawnChance = Math.min(0.6, 0.3 + (hits * 0.01));
+
 }
 
-function createMoleInHole(targetHole) {
-    const mole = document.createElement('div');
-    mole.classList.add('mole');
+function createMoleInHole(targetHole){
 
-    const greenColor = `hsl(120, 70%, ${baseLightness}%)`;
-    
-    mole.style.backgroundColor = greenColor ;
-    mole.dataset.type = 'green';
-    
+    const mole=document.createElement("div");
+
+    mole.classList.add("mole");
+
+    const moleLightness = baseLightness + contrastGap;
+
+    mole.style.backgroundColor =
+        `hsl(120,70%,${moleLightness}%)`;
+
     targetHole.appendChild(mole);
-    
-    setTimeout(() => mole.classList.add('active'), 1500);
 
-    const lifeTime = 3000 + Math.random() * 2000;
-    setTimeout(() => {
-        if (mole && mole.parentNode) {
-            mole.classList.remove('active');
-            setTimeout(() => mole.remove(), 100);
+    setTimeout(()=>{
+
+        mole.classList.add("active");
+
+    },300);
+
+    setTimeout(()=>{
+
+        if(mole.parentNode){
+
+            mole.classList.remove("active");
+
+            setTimeout(()=>{
+
+                mole.remove();
+
+            },150);
+
         }
-    }, lifeTime);
+
+    },moleLifetime);
+
 }
 
-holes.forEach(hole => {
-    hole.addEventListener('mousedown', handleWhack);
-    hole.addEventListener('touchstart', (e) => {
+holes.forEach(hole=>{
+
+    hole.addEventListener("mousedown",handleWhack);
+
+    hole.addEventListener("touchstart",(e)=>{
+
         e.preventDefault();
+
         handleWhack.call(hole);
+
     });
+
 });
 
-function handleWhack() {
-    if (isGameOver) return;
+function handleWhack(){
 
-    const mole = this.querySelector('.mole.active');
+    if(isGameOver) return;
 
-    // ถ้ากดพลาด ไม่มีตุ่น
-    if (!mole) {
+    const mole=this.querySelector(".mole.active");
+
+    if(!mole){
+
         mistakes++;
+
         updateLives();
 
-        if (mistakes >= 3) {
+        if(mistakes>=3){
+
             endGame("GAME OVER");
+
         }
 
         return;
+
     }
 
-    // ถ้ากดโดนตุ่นสีเขียว
     hits++;
-    hitsDisplay.innerText = hits;
 
-    contrastGap = Math.max(2, contrastGap - 1.5);
+    hitsDisplay.innerText = hits;
 
     mole.remove();
 
-    //if (hits >= 20) {
-    //    endGame("YOU WIN!");
-   // }
+    updateDifficulty();
+
 }
 
-function updateLives() {
-    livesDisplay.innerText = "0".repeat(3 - mistakes);
+function updateLives(){
+
+    livesDisplay.innerHTML = "❤️".repeat(3-mistakes);
+
 }
 
-function endGame(msg) {
+function endGame(msg){
+
     isGameOver = true;
 
     clearInterval(gameInterval);
+
     clearInterval(countdownInterval);
 
     statusMsg.innerText = msg;
-    overlay.style.display = 'flex';
 
-    setTimeout(() => {
-        window.location.href = "../index.html";
-    }, 3000);
+    overlay.style.display = "flex";
+
+    setTimeout(()=>{
+
+        window.location.href="../index.html";
+
+    },3000);
+
 }
 
 init();
