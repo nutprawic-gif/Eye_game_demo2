@@ -20,10 +20,10 @@ class Target {
         this.type = type;
         this.radius = Math.random() * (35 - 20) + 20;
 
-        let speedBase = 6.0;
+        let speedBase = 14.0;
 
         if (type === 'bad') {
-            speedBase = 14.0;
+            speedBase = 1.0;
         }
 
         this.x = Math.random() * (canvas.width - this.radius * 2) + this.radius;
@@ -33,7 +33,7 @@ class Target {
         this.vy = (Math.random() - 0.5) * speedBase;
 
         this.color = (type === 'good') ? '#33ff33' : '#ff3333';
-        this.life = Math.random() * 2 + 3;
+        this.life = Math.random() * 2 + 8;
     }
 
     update(dt) {
@@ -138,8 +138,11 @@ function updateUI() {
     comboDisplay.innerText = combo;
 }
 
-window.addEventListener('mousedown', e => handleInput(e.clientX, e.clientY));
-window.addEventListener('touchstart', e => {
+canvas.addEventListener('mousedown', e => {
+    handleInput(e.clientX, e.clientY);
+});
+
+canvas.addEventListener('touchstart', e => {
     e.preventDefault();
     handleInput(e.touches[0].clientX, e.touches[0].clientY);
 }, { passive: false });
