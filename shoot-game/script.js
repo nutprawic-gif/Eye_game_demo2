@@ -6,6 +6,7 @@ const timeDisplay = document.getElementById('time');
 const overlay = document.getElementById('overlay');
 const statusMsg = document.getElementById('status-msg');
 const finalScoreMsg = document.getElementById('final-score');
+const TOP_MARGIN = 90;
 
 let score = 0;
 let combo = 1;
@@ -27,7 +28,7 @@ class Target {
         }
 
         this.x = Math.random() * (canvas.width - this.radius * 2) + this.radius;
-        this.y = Math.random() * (canvas.height - this.radius * 2) + this.radius;
+        this.y = Math.random() * (canvas.height - TOP_MARGIN - this.radius * 2) + TOP_MARGIN + this.radius;
 
         this.vx = (Math.random() - 0.5) * speedBase;
         this.vy = (Math.random() - 0.5) * speedBase;
@@ -42,7 +43,7 @@ class Target {
         this.life -= dt;
 
         if (this.x - this.radius < 0 || this.x + this.radius > canvas.width) this.vx *= -1;
-        if (this.y - this.radius < 60 || this.y + this.radius > canvas.height) this.vy *= -1;
+        if (this.y - this.radius < TOP_MARGIN || this.y + this.radius > canvas.height) this.vy *= -1;
     }
 
     draw() {
