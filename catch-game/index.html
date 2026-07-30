@@ -3,18 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>catch-game</title>
+    <title>Catch Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-      <a href="../index.html" id="back-btn">⬅ Menu</a>
+
+    <!-- ปุ่มกลับหน้าหลักระหว่างเล่น -->
+    <a href="../index.html" id="back-btn">⬅ Menu</a>
+
+    <!-- Game Over -->
     <div id="overlay">
-        <h2>GAME OVER</h2>
-        <p id="final-score">Score: 0</p>
-        <button class="restart-btn" onclick="location.reload()">Try Again</button>
+
+        <div class="game-over-box">
+
+            <h2>GAME OVER</h2>
+
+            <p id="final-level">Level : 1/5</p>
+
+            <p id="final-score">Score : 0</p>
+
+            <p id="final-green">Green Caught : 0</p>
+
+            <p id="final-red">Red Caught : 0</p>
+
+            <p id="final-accuracy">Accuracy : 0%</p>
+
+            <div class="button-group">
+
+                <button id="restart-btn" class="restart-btn">
+                    Restart
+                </button>
+
+                <button id="home-btn" class="home-btn">
+                    Main Menu
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+<div id="start-popup">
+
+    <div class="start-box">
+
+        <h2>วิธีการเล่น</h2>
+
+        <p>
+            บังคับแถบ (Bar) โดยใช้นิ้วเลื่อน
+            <br>
+            ซ้าย - ขวา
+            <br><br>
+            เพื่อรับบล็อกสีเขียวให้ได้มากที่สุด
+            <br>
+
+            และหลีกเลี่ยงการรับบล็อกสีแดง
+        </p>
+        
+
+        <div class="score-guide">
+            <p>🟩 +10 คะแนน</p>
+            <p>🟥 -20 คะแนน</p>
+        </div>
+         <button id="start-btn">
+            ▶ เริ่มเกม
+        </button>
+
     </div>
 
+</div>
     <canvas id="gameCanvas"></canvas>
+
     <script src="script.js"></script>
+
 </body>
 </html>
