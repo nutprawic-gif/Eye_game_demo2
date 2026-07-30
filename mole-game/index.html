@@ -9,27 +9,84 @@
 <body>
     <div class="ui-top">
          <a href="../index.html" id="back-btn">⬅ Menu</a>
-       <div>Hits: <span id="hits">0</span></div>
+       <div>Score: <span id="score">0</span></div>
          <div id="timer">10:00</div>
-        <div>Lives: <span id="lives">000</span></div>
+        <div>Lives: <span id="lives">❤️❤️❤️</span></div>
          <div id="level">Level 1</div>
     </div>
   
     <div id="overlay">
-        <h2 id="status-msg">GAME OVER</h2>
+
+    <h2 id="status-msg">GAME OVER</h2>
+
+    <p id="final-level"></p>
+
+    <p id="final-score"></p>
+
+    <p id="final-green"></p>
+
+    <p id="final-red"></p>
+
+    <p id="final-accuracy"></p>
+
+    <div class="button-group">
+        <button id="restart-btn" class="restart-btn">
+                    Restart
+                </button>
+
+                <button id="home-btn" class="home-btn">
+                    Main Menu
+                </button>
     </div>
 
-    <div class="game-container" id="gameGrid">
-        <div class="hole" data-index="0"></div>
-        <div class="hole" data-index="1"></div>
-        <div class="hole" data-index="2"></div>
-        <div class="hole" data-index="3"></div>
-        <div class="hole" data-index="4"></div>
-        <div class="hole" data-index="5"></div>
-        <div class="hole" data-index="6"></div>
-        <div class="hole" data-index="7"></div>
-        <div class="hole" data-index="8"></div>
+</div>
+<div id="start-popup">
+
+    <div class="start-box">
+
+        <h2>วิธีการเล่น</h2>
+
+        <p>
+            ตีตัวตุ่นโดยใช้นิ้วกดที่หน้าจอ
+            <br><br>
+
+            ตีตัวตุ่นสีเขียวให้ได้มากที่สุด
+            <br>
+
+            และหลีกเลี่ยงการตีตัวตุ่นสีแดง
+        </p>
+
+        <div class="score-guide">
+
+            <p>🟩 +10 คะแนน</p>
+
+            <p>🟥 -20 คะแนน</p>
+
+            <p>❌ กดพื้นที่ว่าง ❤️ ลดลง 1 ครั้ง</p>
+
+        </div>
+
+        <button id="start-btn">
+            ▶ เริ่มเกม
+        </button>
+
     </div>
+
+</div>
+
+<div class="game-container" id="gameGrid">
+
+    <div class="hole" data-index="0"></div>
+    <div class="hole" data-index="1"></div>
+    <div class="hole" data-index="2"></div>
+    <div class="hole" data-index="3"></div>
+    <div class="hole" data-index="4"></div>
+    <div class="hole" data-index="5"></div>
+    <div class="hole" data-index="6"></div>
+    <div class="hole" data-index="7"></div>
+    <div class="hole" data-index="8"></div>
+
+</div>
 
     <script src="script.js"></script>
 </body>
