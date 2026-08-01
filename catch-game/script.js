@@ -9,15 +9,16 @@ let isGameOver = false;
 let level = 1;
 const maxLevel = 5;
 
-let greenSpawned = 0;
-let redSpawned = 0;
-let greenCaught = 0;
-let redCaught = 0;
+let targetCaught = 0;
+let distractorCaught = 0;
+
+let targetSpawned = 0;
+let distractorSpawned = 0;
 
 let startTime = 0;
 let gameDuration = 10 * 60;
 
-const player = { width: 90, height: 15, x: 0, y: 0, color: '#00b0ff' };
+const player = { width: 90, height: 15, x: 0, y: 0, color: '#FFFFFF' };
 let blocks = [];
 
 const speedMultiplier = [
@@ -36,13 +37,61 @@ const spawnInterval = [
     400
 ];
 
-const redLevels = [
-    "#ffd6d6",
-    "#ffb0b0",
-    "#ff8a8a",
-    "#ff4d4d",
-    "#ff0000"
-];
+//barปรับสีแดง
+const slider = document.getElementById("contrast-slider");
+const value = document.getElementById("contrast-value");
+let contrast = 100;
+
+slider.addEventListener("input", () => {
+    contrast = Number(slider.value);
+    value.innerText = contrast + "%";
+
+    updatePreview();
+});
+function getTargetColor() {
+
+    const g = Math.round(150 - (contrast / 100) * 150);
+    const b = g;
+
+    return `rgb(200, ${g}, ${b})`;
+}
+function updatePreview() {
+
+    document.getElementById("target-preview").style.backgroundColor =
+        getTargetColor();
+
+    document.getElementById("distractor-preview").style.backgroundColor =
+        getDistractorColor();
+
+}
+
+//ปรับbarสีเขียว
+const greenSlider = document.getElementById("green-slider");
+const greenValue = document.getElementById("green-value");
+
+let greenContrast = 100;
+
+
+greenSlider.addEventListener("input", () => {
+
+    greenContrast = Number(greenSlider.value);
+
+    greenValue.innerText = greenContrast + "%";
+
+    updatePreview();
+
+});
+updatePreview();
+
+function getDistractorColor(){
+
+    const r = Math.round(150 - (greenContrast / 100) * 150);
+    const b = r;
+
+    return `rgb(${r},100,${b})`;
+
+}
+
 
 const accuracyGoal = [
     80, // Level 1 -> 2
@@ -86,13 +135,16 @@ function manageSpawning(currentTime) {
 
     if (currentTime - lastSpawnTime > interval) {
 
-        const type = Math.random() < 0.3 ? "green" : "red";
+        const type = Math.random() < 0.5 
+    ? "target" 
+    : "distractor";
 
-        if (type === "green") {
-            greenSpawned++;
-        } else {
-            redSpawned++;
-        }
+     if(type==="target"){
+    targetSpawned++;
+}
+else{
+    distractorSpawned++;
+}
 
         blocks.push({
             x: Math.random() * (canvas.width - 30),
@@ -117,15 +169,15 @@ function update() {
             b.x < player.x + player.width && 
             b.x + b.size > player.x) {
             
-           if (b.type === "green") {
+           if (b.type === "target") {
 
     score += 10;
-    greenCaught++;
+    targetCaught++;
 
-    const accuracy = (greenCaught + redCaught) === 0
+    const accuracy = (targetCaught + distractorCaught) === 0
     ? 0
-    : (greenCaught / (greenCaught + redCaught)) * 100;
-const greenGoal = [
+    : (targetCaught / (targetCaught + distractorCaught)) * 100;
+const targetGoal = [
     15,
     25,
     35,
@@ -133,8 +185,9 @@ const greenGoal = [
     60
 ][level - 1];
 
+
 if (
-    greenCaught >= greenGoal &&
+    targetCaught >= targetGoal &&
     accuracy >= accuracyGoal[level - 1] &&
     level < maxLevel
 ) {
@@ -145,7 +198,7 @@ if (
 else {
 
     score -= 20;
-    redCaught++;
+    distractorCaught++;
 
 }
 blocks.splice(i, 1);
@@ -161,11 +214,11 @@ continue;
    if (elapsed >= gameDuration) {
     isGameOver = true;
 
-    const accuracy = greenSpawned === 0
-    ? 0
-    : Math.round(
-        (greenCaught / greenSpawned) * 100
-    );
+    const accuracy = targetSpawned === 0
+? 0
+: Math.round(
+    (targetCaught / targetSpawned) * 100
+);
        overlay.style.display = "flex";
 
 document.getElementById("final-level").innerText =
@@ -175,10 +228,10 @@ document.getElementById("final-score").innerText =
     `Score : ${score}`;
 
 document.getElementById("final-green").innerText =
-    `Green Caught : ${greenCaught}`;
+`Target Caught : ${targetCaught}`;
 
 document.getElementById("final-red").innerText =
-    `Red Caught : ${redCaught}`;
+`Distractor Caught : ${distractorCaught}`;
 
 document.getElementById("final-accuracy").innerText =
     `TargetAccuracy : ${accuracy}%`;
@@ -191,11 +244,21 @@ function draw() {
     ctx.fillStyle = player.color;
     ctx.fillRect(player.x, player.y, player.width, player.height);
 
-    blocks.forEach(b => {
-        ctx.fillStyle = b.type === 'green' ? '#00e676' : redLevels[level - 1];
-        ctx.fillRect(b.x, b.y, b.size, b.size);
-    });
+   blocks.forEach(b => {
 
+    ctx.fillStyle =
+        b.type === "target"
+            ? getTargetColor()
+            : getDistractorColor();
+
+    ctx.fillRect(
+        b.x,
+        b.y,
+        b.size,
+        b.size
+    );
+
+});
     ctx.fillStyle = "white";
 
 // LEVEL อยู่กึ่งกลางด้านบน
