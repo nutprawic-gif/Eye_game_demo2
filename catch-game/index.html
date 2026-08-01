@@ -22,9 +22,9 @@
 
             <p id="final-score">Score : 0</p>
 
-            <p id="final-green">Green Caught : 0</p>
+            <p id="final-green">Target Caught : 0</p>
 
-            <p id="final-red">Red Caught : 0</p>
+            <p id="final-red">Distractor Caught : 0</p>
 
             <p id="final-accuracy">Accuracy : 0%</p>
 
@@ -54,18 +54,88 @@
             <br>
             ซ้าย - ขวา
             <br><br>
-            เพื่อรับบล็อกสีเขียวให้ได้มากที่สุด
+            เพื่อรับบล็อกสีเป้าหมาย
             <br>
-
-            และหลีกเลี่ยงการรับบล็อกสีแดง
+            และหลีกเลี่ยงบล็อกสีตรงข้าม
         </p>
-        
 
         <div class="score-guide">
-            <p>🟩 +10 คะแนน</p>
-            <p>🟥 -20 คะแนน</p>
+            <p>🟥 +10 คะแนน</p>
+            <p>🟩 -20 คะแนน</p>
         </div>
-         <button id="start-btn">
+
+        <hr>
+
+        <h3>ตั้งค่าการฝึก</h3>
+
+        <!-- เลือกตาขี้เกียจ -->
+        <div class="setting-group">
+            <label>ตาขี้เกียจ</label><br>
+
+            <label>
+                <input type="radio" name="eye" value="left">
+                ตาซ้าย
+            </label>
+
+            <label>
+                <input type="radio" name="eye" value="right" checked>
+                ตาขวา
+            </label>
+        </div>
+
+        <br>
+
+        <!-- Sliderสีแดง -->
+        <div class="setting-group">
+
+            <label>
+                ความเข้มของสีแดง
+                <span id="contrast-value">100%</span>
+            </label>
+
+            <input
+                type="range"
+                id="contrast-slider"
+                min="10"
+                max="100"
+                value="100">
+
+        </div>
+        <!-- Sliderสีเขียว -->
+        <div class="setting-group">
+
+    <label>
+        ความเข้มสีเขียว
+        <span id="green-value">100%</span>
+    </label>
+
+    <input
+        type="range"
+        id="green-slider"
+        min="10"
+        max="100"
+        value="100">
+
+</div>
+
+        <br>
+
+        <!-- Preview -->
+        <div class="preview">
+
+            <div>
+                Target
+                <div id="target-preview"></div>
+            </div>
+
+            <div>
+                Distractor
+                <div id="distractor-preview"></div>
+            </div>
+
+        </div>
+
+        <button id="start-btn">
             ▶ เริ่มเกม
         </button>
 
