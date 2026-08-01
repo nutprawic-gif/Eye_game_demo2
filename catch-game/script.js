@@ -53,7 +53,7 @@ function getTargetColor() {
     const g = Math.round(150 - (contrast / 100) * 150);
     const b = g;
 
-    return `rgb(200, ${g}, ${b})`;
+    return `rgb(150, ${g}, ${b})`;
 }
 function updatePreview() {
 
@@ -118,9 +118,16 @@ function handleMove(clientX) {
 }
 
 window.addEventListener('touchmove', (e) => {
+
+    // ถ้ากำลังลาก slider ไม่ต้องควบคุมเกม
+    if(e.target.type === "range") {
+        return;
+    }
+
     handleMove(e.touches[0].clientX);
-    e.preventDefault(); 
-}, { passive: false });
+    e.preventDefault();
+
+}, { passive:false });
 
 window.addEventListener('mousemove', (e) => {
     handleMove(e.clientX);
