@@ -111,15 +111,17 @@ canvas {
     width:480px;
     max-width:90%;
 
-    background:#2d2d2d;
+    background:#000000;
     color:white;
 
+    border:3px solid white;
     border-radius:24px;
+
     padding:40px;
 
     text-align:center;
 
-    box-shadow:0 10px 30px rgba(0,0,0,.5);
+    box-shadow:0 10px 30px rgba(0,0,0,.8);
 }
 
 .start-box h2{
@@ -167,4 +169,122 @@ canvas {
 
 #start-btn:hover{
     transform:scale(1.05);
+}
+/* -------------------------- */
+/* Training Setting */
+/* -------------------------- */
+
+.setting-group{
+    margin:20px 0;
+    text-align:left;
+}
+
+.setting-group label{
+    font-size:20px;
+    color:white;
+}
+
+#contrast-slider{
+    width:100%;
+    margin-top:10px;
+   
+}
+
+#contrast-value,#green-value{
+    float:right;
+    font-weight:bold;
+    color:#fffffe;
+}
+
+#green-slider{
+    width:100%;
+    margin-top:10px;
+     
+}
+
+.preview{
+
+    display:flex;
+
+    justify-content:space-around;
+
+    margin:25px 0;
+
+}
+
+.preview > div{
+
+    text-align:center;
+
+    color:white;
+
+    font-size:18px;
+
+}
+
+#target-preview,
+#distractor-preview{
+
+    width:50px;
+    height:50px;
+
+    margin:10px auto;
+
+    border-radius:8px;
+
+    border:2px solid white;
+
+    background:#888;
+
+}
+
+/* ---------- Slider Style ---------- */
+
+#contrast-slider,
+#green-slider {
+    appearance: none;
+    width: 100%;
+    height: 8px;
+
+    background: white;
+    border-radius: 10px;
+
+    outline: none;
+    margin-top: 15px;
+}
+
+
+/* ปุ่มเลื่อน Chrome / Edge / Safari */
+#contrast-slider::-webkit-slider-thumb,
+#green-slider::-webkit-slider-thumb {
+
+    appearance: none;
+
+    width: 24px;
+    height: 24px;
+
+    background: white;
+
+    border: 3px solid white;
+
+    border-radius: 50%;
+
+    cursor: pointer;
+}
+
+
+/* Firefox */
+#contrast-slider::-moz-range-thumb,
+#green-slider::-moz-range-thumb {
+
+    width: 24px;
+    height: 24px;
+
+    background: white;
+
+    border: 3px solid  white;
+
+    border-radius: 50%;
+
+    cursor: pointer;
 }
