@@ -6,8 +6,9 @@ body {
     font-family: sans-serif;
 }
 
-canvas {
-    display: block;
+canvas{
+    display:block;
+    touch-action:none;
 }
 
 #back-btn {
@@ -293,4 +294,130 @@ canvas {
     border-radius: 50%;
 
     cursor: pointer;
+}
+
+/* ============================= */
+/* Mobile Responsive */
+/* ============================= */
+@media (max-width: 768px) {
+
+    .start-box{
+        width:90%;
+        max-height:92dvh;
+        padding:20px;
+        border-width:2px;
+        overflow-y:auto;
+    }
+
+    .start-box h2{
+        font-size:30px;
+        margin-bottom:15px;
+    }
+
+    .start-box h3{
+        font-size:22px;
+        margin:15px 0;
+    }
+
+    .start-box p{
+        font-size:18px;
+        line-height:1.5;
+    }
+
+    .score-guide{
+        padding:15px;
+        margin:20px 0;
+    }
+
+    .score-guide p{
+        font-size:22px;
+    }
+
+    .setting-group{
+        margin:15px 0;
+    }
+
+    .setting-group label{
+        font-size:18px;
+    }
+
+    #target-preview,
+    #distractor-preview{
+        width:40px;
+        height:40px;
+    }
+
+    .preview>div{
+        font-size:16px;
+    }
+
+    #start-btn{
+        width:180px;
+        height:50px;
+        font-size:22px;
+    }
+
+    .game-over-box{
+        width:90%;
+        padding:20px;
+    }
+
+    .game-over-box h2{
+        font-size:28px;
+    }
+
+    .game-over-box p{
+        font-size:18px;
+    }
+
+    .button-group button{
+        padding:12px 18px;
+        font-size:16px;
+    }
+
+    #back-btn{
+        padding:8px 12px;
+        font-size:14px;
+        top:10px;
+        left:10px;
+    }
+}
+
+@media (max-width: 400px){
+
+    .start-box{
+        padding:15px;
+    }
+
+    .start-box h2{
+        font-size:26px;
+    }
+
+    .start-box h3{
+        font-size:20px;
+    }
+
+    .start-box p{
+        font-size:16px;
+    }
+
+    .score-guide p{
+        font-size:18px;
+    }
+
+    .setting-group label{
+        font-size:16px;
+    }
+
+    #start-btn{
+        width:160px;
+        height:46px;
+        font-size:20px;
+    }
+
+    #target-preview,
+    #distractor-preview{
+        width:35px;
+        height:35px;
+    }
 }
