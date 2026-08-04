@@ -117,7 +117,7 @@ function handleMove(clientX) {
     if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
 }
 
-canvas.addEventListener('touchmove', (e) => {
+window.addEventListener('touchmove', (e) => {
 
     // ถ้ากำลังลาก slider ไม่ต้องควบคุมเกม
     if(e.target.type === "range") {
