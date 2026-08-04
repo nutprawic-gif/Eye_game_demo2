@@ -48,12 +48,12 @@ slider.addEventListener("input", () => {
 
     updatePreview();
 });
-function getTargetColor() {
+function getTargetColor(){
 
-    const g = Math.round(150 - (contrast / 100) * 150);
-    const b = g;
+    const r = Math.round(30 + (contrast / 100) * 225);
 
-    return `rgb(150, ${g}, ${b})`;
+    return `rgb(${r},0,0)`;
+
 }
 function updatePreview() {
 
@@ -85,12 +85,12 @@ updatePreview();
 
 function getDistractorColor(){
 
-    const r = Math.round(150 - (greenContrast / 100) * 150);
-    const b = r;
+    const g = Math.round(30 + (greenContrast / 100) * 225);
 
-    return `rgb(${r},100,${b})`;
+    return `rgb(0,${g},0)`;
 
 }
+
 
 
 const accuracyGoal = [
@@ -117,7 +117,7 @@ function handleMove(clientX) {
     if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
 }
 
-window.addEventListener('touchmove', (e) => {
+canvas.addEventListener('touchmove', (e) => {
 
     // ถ้ากำลังลาก slider ไม่ต้องควบคุมเกม
     if(e.target.type === "range") {
@@ -128,6 +128,14 @@ window.addEventListener('touchmove', (e) => {
     e.preventDefault();
 
 }, { passive:false });
+
+canvas.addEventListener('touchstart', (e) => {
+
+    if (isGameOver || !gameStarted) return;
+
+    handleMove(e.touches[0].clientX);
+
+}, { passive: true });
 
 window.addEventListener('mousemove', (e) => {
     handleMove(e.clientX);
