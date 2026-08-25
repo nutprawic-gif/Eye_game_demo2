@@ -26,15 +26,19 @@ const startMessageDuration = 1500; // "เริ่ม!" ค้าง 1.5 วิ
 // SCORE / STATISTICS
 // =====================================================
 
+// รวมทั้งเกม
 let targetCaught = 0;
 let distractorCaught = 0;
 
 let targetSpawned = 0;
 let distractorSpawned = 0;
 
+// เฉพาะ Level ปัจจุบัน
 let levelTargetCaught = 0;
 let levelTargetSpawned = 0;
 
+let levelDistractorCaught = 0;
+let levelDistractorSpawned = 0;
 
 // =====================================================
 // GAME TIME
@@ -86,8 +90,8 @@ const speedMultiplier = [
 
 const spawnInterval = [
 
-      4000,  // Level 1
-    3500,  // Level 2
+      3500,  // Level 1
+    3200,  // Level 2
     3000,  // Level 3
     2500,  // Level 4
     2200   // Level 5
@@ -260,22 +264,6 @@ function updatePreview() {
 
 
 updatePreview();
-
-
-// =====================================================
-// ACCURACY GOAL
-// =====================================================
-
-const accuracyGoal = [
-
-     80, // Level 1 → 2
-    80, // Level 2 → 3
-    85, // Level 3 → 4
-    90, // Level 4 → 5
-    90
-
-];
-
 
 // =====================================================
 // INIT
@@ -455,13 +443,15 @@ function startLevelTransition(nextLevel) {
 
     patternIndex = 0;
 
-    // =========================================
-    // reset สถิติของ level ใหม่
-    // =========================================
+   // =========================================
+   // reset สถิติของ level ใหม่
+   // =========================================
 
     levelTargetCaught = 0;
     levelTargetSpawned = 0;
 
+    levelDistractorCaught = 0;
+    levelDistractorSpawned = 0;
     // =========================================
     // ห้าม spawn ทันที
     // =========================================
@@ -528,11 +518,14 @@ function manageSpawning(
         // DISTRACTOR
         // ==============================
 
-        else {
+       else {
 
-            distractorSpawned++;
+    distractorSpawned++;
 
-        }
+    // นับเขียวที่เกิดใน Level นี้
+    levelDistractorSpawned++;
+
+}
 
 
         // ==============================
@@ -656,21 +649,20 @@ if (isLevelTransition) {
 
                 const targetGoal = [
 
-                    1,
-                     1,
-                     1,
-                     1,
-                     1
+                    10,
+                     15,
+                     20,
+                     25,
+                     30
 
                 ][level - 1];
 
 
                 // LEVEL UP
               if (
-    levelTargetCaught >= targetGoal &&
-    accuracy >= accuracyGoal[level - 1] &&
-    !isLevelTransition
-) {
+             levelTargetCaught >= targetGoal &&
+            !isLevelTransition
+            ) {
 
     // ถ้าอยู่ Level 5 และผ่านเป้าหมาย → จบเกม
     if (level === maxLevel) {
@@ -694,7 +686,10 @@ if (isLevelTransition) {
 
                 distractorCaught++;
 
-            }
+                // นับการกดเขียวผิดใน Level นี้
+                levelDistractorCaught++;
+
+                }
 
 
             blocks.splice(i, 1);
@@ -931,6 +926,34 @@ function draw() {
 
     );
 
+// =================================================
+// FALSE POSITIVE
+// =================================================
+
+const falsePositive =
+
+    levelDistractorSpawned === 0
+
+        ? 0
+
+        :
+
+        (
+            levelDistractorCaught /
+            levelDistractorSpawned
+        ) * 100;
+
+
+ctx.fillText(
+
+    `False Positive: ${Math.round(falsePositive)}%`,
+
+    20,
+
+    80
+
+);
+
 
     // =================================================
     // LEVEL TRANSITION SCREEN
@@ -1075,7 +1098,7 @@ function endGame() {
         `Distractor Caught : ${distractorCaught}`;
 
     document.getElementById("final-accuracy").innerText =
-        `Accuracy : ${finalAccuracy}%`;
+        `Target Detection : ${finalAccuracy}%`;
 
     // =========================================
     // แสดงหน้าสรุป
