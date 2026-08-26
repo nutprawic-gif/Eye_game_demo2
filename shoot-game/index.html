@@ -6,19 +6,264 @@
     <title>shoot-game</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+
+    <!-- =========================
+         Game UI
+    ========================== -->
+
     <div class="ui-container">
-        <a href="../index.html" id="back-btn">⬅ Menu</a>
-        <div>Score: <span id="score">0</span></div>
-        <div>Combo: x<span id="combo">1</span></div>
-        <div>Time: <span id="time">60</span></div>
+
+        <a href="../index.html" id="back-btn">
+            ⬅ Menu
+        </a>
+
+        <div>
+            Score:
+            <span id="score">0</span>
+        </div>
+
+        <div>
+            Combo:
+            x<span id="combo">1</span>
+        </div>
+
+        <div>
+            Time:
+            <span id="time">10:00</span>
+        </div>
+
+        <div id="level">
+            Level 1
+        </div>
+
     </div>
+
+
+    <!-- =========================
+         Game Over
+    ========================== -->
+
     <div id="overlay">
-        <h2 id="status-msg">GAME OVER</h2>
-        <p id="final-score"></p>
-        <button onclick="location.reload()">Play Again</button>
+
+        <div class="game-over-box">
+
+            <h2 id="status-msg">
+                GAME OVER
+            </h2>
+
+            <p id="final-level">
+                Level : 1/5
+            </p>
+
+            <p id="final-score">
+                Score : 0
+            </p>
+
+            <p id="final-target">
+                Target Caught : 0
+            </p>
+
+            <p id="final-distractor">
+                Distractor Caught : 0
+            </p>
+
+            <p id="final-accuracy">
+                Target Detection : 0%
+            </p>
+
+            <p id="final-combo">
+                Max Combo : 1
+            </p>
+
+            <div class="button-group">
+
+                <button
+                    id="restart-btn"
+                    class="restart-btn">
+                    Restart
+                </button>
+
+                <button
+                    id="home-btn"
+                    class="home-btn">
+                    Main Menu
+                </button>
+
+            </div>
+
+        </div>
+
     </div>
+
+
+    <!-- =========================
+         Start Popup
+    ========================== -->
+
+    <div id="start-popup">
+
+        <div class="start-box">
+
+            <h2>วิธีการเล่น</h2>
+
+            <p>
+                ยิงเป้าหมายสีแดง
+                <br>
+                และหลีกเลี่ยงการยิงสีเขียว
+            </p>
+
+
+            <!-- Score Guide -->
+
+            <div class="score-guide">
+
+                <p>🟥 Target  +10 คะแนน</p>
+
+                <p>🟩 Distractor  0 คะแนน</p>
+
+            </div>
+
+
+            <hr>
+
+
+            <h3>
+                ตั้งค่าการฝึก
+            </h3>
+
+
+            <!-- Eye Selection -->
+
+            <div class="setting-group">
+
+                <label>
+                    ตาขี้เกียจ
+                </label>
+
+                <br>
+
+                <label>
+
+                    <input
+                        type="radio"
+                        name="eye"
+                        value="left">
+
+                    ตาซ้าย
+
+                </label>
+
+
+                <label>
+
+                    <input
+                        type="radio"
+                        name="eye"
+                        value="right"
+                        checked>
+
+                    ตาขวา
+
+                </label>
+
+            </div>
+
+
+            <br>
+
+
+            <!-- Red Slider -->
+
+            <div class="setting-group">
+
+                <label>
+
+                    ความเข้มสีแดง
+                    <span id="contrast-value">
+                        100%
+                    </span>
+
+                </label>
+
+                <input
+                    type="range"
+                    id="contrast-slider"
+                    min="10"
+                    max="100"
+                    value="100">
+
+            </div>
+
+
+            <!-- Green Slider -->
+
+            <div class="setting-group">
+
+                <label>
+
+                    ความเข้มสีเขียว
+                    <span id="green-value">
+                        100%
+                    </span>
+
+                </label>
+
+                <input
+                    type="range"
+                    id="green-slider"
+                    min="10"
+                    max="100"
+                    value="100">
+
+            </div>
+
+
+            <br>
+
+
+            <!-- Preview -->
+
+            <div class="preview">
+
+                <div>
+
+                    Target
+
+                    <div id="target-preview"></div>
+
+                </div>
+
+
+                <div>
+
+                    Distractor
+
+                    <div id="distractor-preview"></div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Start -->
+
+            <button id="start-btn">
+                ▶ เริ่มเกม
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- Game Canvas -->
+
     <canvas id="gameCanvas"></canvas>
+
+
     <script src="script.js"></script>
+
 </body>
 </html>
