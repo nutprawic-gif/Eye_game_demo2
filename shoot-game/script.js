@@ -3,29 +3,134 @@ const ctx = canvas.getContext('2d');
 const scoreDisplay = document.getElementById('score');
 const comboDisplay = document.getElementById('combo');
 const timeDisplay = document.getElementById('time');
+const levelDisplay = document.getElementById('level');
 const overlay = document.getElementById('overlay');
+const startPopup = document.getElementById('start-popup');
+const startBtn = document.getElementById('start-btn');
 const statusMsg = document.getElementById('status-msg');
 const finalScoreMsg = document.getElementById('final-score');
 const TOP_MARGIN = 90;
 
+let gameStarted = false;
 let score = 0;
 let combo = 1;
+// =========================
+// Training Settings
+// =========================
+
+let targetContrast = 100;
+let distractorContrast = 100;
+
+const contrastSlider = document.getElementById("contrast-slider");
+const greenSlider = document.getElementById("green-slider");
+
+const contrastValue = document.getElementById("contrast-value");
+const greenValue = document.getElementById("green-value");
+
+const targetPreview = document.getElementById("target-preview");
+const distractorPreview = document.getElementById("distractor-preview");
+let maxCombo = 1;
+
 let timeLeft = 600;
 let isGameOver = false;
+
+let level = 1;
+
+let targetSpawned = 0;
+let targetCaught = 0;
+
+let distractorSpawned = 0;
+let distractorCaught = 0;
+
 let targets = [];
 let particles = [];
+
 let lastTime = Date.now();
+
+const TARGETS_PER_LEVEL = 15;
+const MAX_LEVEL = 5;
+
+const SPAWN_DELAY = 1.5;
+
+let redSpawnCooldown = 0;
+let greenSpawnCooldown = 0;
+// =========================
+// Red Target
+// =========================
+
+function getTargetColor() {
+
+    const r = Math.round(
+        30 + (targetContrast / 100) * 225
+    );
+
+    return `rgb(${r}, 0, 0)`;
+}
+
+
+// =========================
+// Green Distractor
+// =========================
+
+function getDistractorColor() {
+
+    const g = Math.round(
+        30 + (distractorContrast / 100) * 225
+    );
+
+    return `rgb(0, ${g}, 0)`;
+}
+
+// =========================
+// Slider
+// =========================
+
+contrastSlider.addEventListener("input", () => {
+
+    targetContrast =
+        Number(contrastSlider.value);
+
+    contrastValue.innerText =
+        `${targetContrast}%`;
+
+    targetPreview.style.backgroundColor =
+        getTargetColor();
+});
+
+
+greenSlider.addEventListener("input", () => {
+
+    distractorContrast =
+        Number(greenSlider.value);
+
+    greenValue.innerText =
+        `${distractorContrast}%`;
+
+    distractorPreview.style.backgroundColor =
+        getDistractorColor();
+});
 
 class Target {
     constructor(type) {
         this.type = type;
-        this.radius = Math.random() * (35 - 20) + 20;
+        this.radius = Math.random() * (50 - 30) + 30;
 
-        let speedBase = 14.0;
+        let speedBase;
 
-        if (type === 'bad') {
-            speedBase = 1.0;
-        }
+if (type === 'good') {
+    // 🔴 Target
+    speedBase = [
+        3,
+        5,
+        7,
+        9,
+        11
+    ][level - 1];
+
+} else {
+    // 🟢 Distractor
+    speedBase = 2;
+}
 
         this.x = Math.random() * (canvas.width - this.radius * 2) + this.radius;
         this.y = Math.random() * (canvas.height - TOP_MARGIN - this.radius * 2) + TOP_MARGIN + this.radius;
@@ -33,7 +138,10 @@ class Target {
         this.vx = (Math.random() - 0.5) * speedBase;
         this.vy = (Math.random() - 0.5) * speedBase;
 
-        this.color = (type === 'good') ? '#33ff33' : '#ff3333';
+        this.color =
+    (type === 'good')
+        ? getTargetColor()
+        : getDistractorColor();
         this.life = Math.random() * 2 + 8;
     }
 
@@ -86,57 +194,187 @@ class Particle {
 function init() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    maintainTargets();
 }
-
 function spawnTarget(type) {
-    const tType = type || (Math.random() > 0.5 ? 'good' : 'bad');
+
+    const tType =
+        type || (Math.random() > 0.5 ? 'good' : 'bad');
+
     targets.push(new Target(tType));
+
+    if (tType === 'good') {
+
+        targetSpawned++;
+
+    } else {
+
+        distractorSpawned++;
+
+    }
 }
 
-function maintainTargets() {
-    const goodCount = targets.filter(t => t.type === 'good').length;
-    const badCount = targets.filter(t => t.type === 'bad').length;
+function maintainTargets(dt) {
 
-    if (goodCount < 3) spawnTarget('good');
-    if (badCount < 3) spawnTarget('bad');
+    redSpawnCooldown -= dt;
+    greenSpawnCooldown -= dt;
+
+    const redCount =
+        targets.filter(t => t.type === 'good').length;
+
+    const greenCount =
+        targets.filter(t => t.type === 'bad').length;
+
+
+    // =========================
+    // 🔴 RED
+    // =========================
+
+    // ถ้าแดงหมด → เกิดแดง 3 ตัวพร้อมกัน
+    if (redCount === 0 && redSpawnCooldown <= 0) {
+
+        spawnTarget('good');
+        spawnTarget('good');
+        spawnTarget('good');
+
+        redSpawnCooldown = SPAWN_DELAY;
+    }
+
+
+    // =========================
+    // 🟢 GREEN
+    // =========================
+
+    // ถ้าเขียวหายไป → เกิดใหม่ทีละ 1 ตัว
+    if (greenCount < 3 && greenSpawnCooldown <= 0) {
+
+        spawnTarget('bad');
+
+        greenSpawnCooldown = SPAWN_DELAY;
+    }
 }
-
 function handleInput(ex, ey) {
+
     if (isGameOver) return;
+
     let hit = false;
-    
+
     for (let i = targets.length - 1; i >= 0; i--) {
+
         const t = targets[i];
-        const dist = Math.hypot(ex - t.x, ey - t.y);
-        
+
+        const dist = Math.hypot(
+            ex - t.x,
+            ey - t.y
+        );
+
         if (dist < t.radius) {
+
             hit = true;
-            createParticles(t.x, t.y, t.color);
+
+            createParticles(
+                t.x,
+                t.y,
+                t.color
+            );
+
+            // =========================
+            // 🔴 RED = TARGET
+            // =========================
+
             if (t.type === 'good') {
+
+                targetCaught++;
+
                 score += 10 * combo;
+
                 combo++;
-            } else {
-                score = Math.max(0, score - 50);
-                combo = 1;
+
+                if (combo > maxCombo) {
+                    maxCombo = combo;
+                }
+
+                updateLevel();
+
+                // ลบแดงที่ยิง
+                targets.splice(i, 1);
+
+                // นับแดงที่เหลือ
+                const redCount =
+                    targets.filter(t => t.type === 'good').length;
+
+                // ถ้าแดงหมด → รอ 1.5 วิ
+                // แล้วเกิดแดง 3 ตัวพร้อมกัน
+                if (redCount === 0) {
+                    redSpawnCooldown = SPAWN_DELAY;
+                }
+
             }
-            targets.splice(i, 1);
-            maintainTargets(); 
+
+            // =========================
+            // 🟢 GREEN = DISTRACTOR
+            // =========================
+
+            else {
+
+                distractorCaught++;
+
+                combo = 1;
+
+                // ลบเขียวที่ยิง
+                targets.splice(i, 1);
+
+                // รอ 1.5 วิ
+                // แล้วเกิดเขียวใหม่ 1 ตัว
+                greenSpawnCooldown = SPAWN_DELAY;
+            }
+
             break;
         }
     }
-    
-    if (!hit) combo = 1;
+
+    // =========================
+    // ยิงไม่โดน
+    // =========================
+
+    if (!hit) {
+        combo = 1;
+    }
+
     updateUI();
 }
+
 
 function createParticles(x, y, color) {
     for (let i = 0; i < 12; i++) particles.push(new Particle(x, y, color));
 }
 
+function updateLevel() {
+
+    level = Math.min(
+        MAX_LEVEL,
+        Math.floor(targetCaught / TARGETS_PER_LEVEL) + 1
+    );
+
+    if (levelDisplay) {
+
+        levelDisplay.innerText =
+            `Level ${level}`;
+
+    }
+}
+
 function updateUI() {
+
     scoreDisplay.innerText = score;
+
     comboDisplay.innerText = combo;
+
+    if (levelDisplay) {
+
+        levelDisplay.innerText =
+            `Level ${level}`;
+
+    }
 }
 
 canvas.addEventListener('mousedown', e => {
@@ -159,12 +397,39 @@ function update() {
     let secs = Math.floor(timeLeft % 60);
     timeDisplay.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
 
-    if (timeLeft <= 0) {
-        isGameOver = true;
-        statusMsg.innerText = "TIME UP!";
-        finalScoreMsg.innerText = "Final Score: " + score;
-        overlay.style.display = 'flex';
-    }
+   if (timeLeft <= 0) {
+
+    isGameOver = true;
+
+    statusMsg.innerText = "TIME UP!";
+
+    const detection =
+        targetSpawned === 0
+            ? 0
+            : Math.round(
+                (targetCaught / targetSpawned) * 100
+            );
+
+    document.getElementById('final-level').innerText =
+        `Level : ${level}/5`;
+
+    document.getElementById('final-score').innerText =
+        `Score : ${score}`;
+
+    document.getElementById('final-target').innerText =
+        `Target Caught : ${targetCaught}`;
+
+    document.getElementById('final-distractor').innerText =
+        `Distractor Caught : ${distractorCaught}`;
+
+    document.getElementById('final-accuracy').innerText =
+        `Target Detection : ${detection}%`;
+
+    document.getElementById('final-combo').innerText =
+        `Max Combo : ${maxCombo}`;
+
+    overlay.style.display = 'flex';
+}
 
     for (let i = targets.length - 1; i >= 0; i--) {
         targets[i].update(dt);
@@ -173,7 +438,7 @@ function update() {
         }
     }
     
-    maintainTargets();
+    maintainTargets(dt);
 
     particles.forEach((p, index) => {
         p.update();
@@ -193,6 +458,80 @@ function loop() {
     if (!isGameOver) requestAnimationFrame(loop);
 }
 
-init();
-window.addEventListener('resize', init);
-requestAnimationFrame(loop);
+function startGame() {
+
+    gameStarted = true;
+
+    startPopup.style.display = 'none';
+
+    score = 0;
+    combo = 1;
+    maxCombo = 1;
+
+    level = 1;
+
+    targetSpawned = 0;
+    targetCaught = 0;
+
+    distractorSpawned = 0;
+    distractorCaught = 0;
+
+    timeLeft = 600;
+
+    isGameOver = false;
+
+    targets = [];
+    particles = [];
+
+    lastTime = Date.now();
+
+    updateUI();
+
+    init();
+
+    // =========================
+    // สร้างเป้าชุดแรกพร้อมกัน
+    // 🔴 แดง 3 ตัว
+    // 🟢 เขียว 3 ตัว
+    // =========================
+
+    for (let i = 0; i < 3; i++) {
+        spawnTarget('good');
+    }
+
+    for (let i = 0; i < 3; i++) {
+        spawnTarget('bad');
+    }
+
+    // ไม่มีการรอในตอนเริ่มเกม
+    redSpawnCooldown = 0;
+    greenSpawnCooldown = 0;
+
+    requestAnimationFrame(loop);
+}
+
+// =========================
+// Initial Training Settings
+// =========================
+
+targetContrast = Number(contrastSlider.value);
+distractorContrast = Number(greenSlider.value);
+
+contrastValue.innerText = `${targetContrast}%`;
+greenValue.innerText = `${distractorContrast}%`;
+
+targetPreview.style.backgroundColor =
+    getTargetColor();
+
+distractorPreview.style.backgroundColor =
+    getDistractorColor();
+
+startBtn.addEventListener('click', startGame);
+
+window.addEventListener('resize', () => {
+
+    if (gameStarted) {
+        init();
+    }
+
+});
