@@ -1,93 +1,340 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>mole-game</title>
+
+    <meta name="viewport"
+          content="width=device-width,
+                   initial-scale=1.0,
+                   maximum-scale=1.0,
+                   user-scalable=no">
+
+    <title>Mole Game</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+
+    <!-- ปุ่มกลับหน้าหลัก -->
+    <a href="../index.html" id="back-btn">
+        ⬅ Menu
+    </a>
+
+
+    <!-- =========================
+         Game UI
+    ========================== -->
+
     <div class="ui-top">
-         <a href="../index.html" id="back-btn">⬅ Menu</a>
-       <div>Score: <span id="score">0</span></div>
-         <div id="timer">10:00</div>
-        <div>Lives: <span id="lives">❤️❤️❤️</span></div>
-         <div id="level">Level 1</div>
+
+        <div>
+            Score:
+            <span id="score">0</span>
+        </div>
+
+        <div id="timer">
+           Time: 10:00
+        </div>
+
+        <div>
+            Lives:
+            <span id="lives">❤️❤️❤️</span>
+        </div>
+
+        <div id="level">
+            Level 1
+        </div>
+
     </div>
-  
+
+
+    <!-- =========================
+         Game Over
+    ========================== -->
+
     <div id="overlay">
 
-    <h2 id="status-msg">GAME OVER</h2>
+        <div class="game-over-box">
 
-    <p id="final-level"></p>
+            <h2 id="status-msg">
+                GAME OVER
+            </h2>
 
-    <p id="final-score"></p>
+            <p id="final-level">
+                Level : 1/5
+            </p>
 
-    <p id="final-green"></p>
+            <p id="final-score">
+                Score : 0
+            </p>
 
-    <p id="final-red"></p>
+            <p id="final-green">
+                Target Caught : 0
+            </p>
 
-    <p id="final-accuracy"></p>
+            <p id="final-red">
+                Distractor Caught : 0
+            </p>
 
-    <div class="button-group">
-        <button id="restart-btn" class="restart-btn">
+            <p id="final-accuracy">
+                Accuracy : 0%
+            </p>
+
+
+            <div class="button-group">
+
+                <button
+                    id="restart-btn"
+                    class="restart-btn">
                     Restart
                 </button>
 
-                <button id="home-btn" class="home-btn">
+                <button
+                    id="home-btn"
+                    class="home-btn">
                     Main Menu
                 </button>
-    </div>
 
-</div>
-<div id="start-popup">
-
-    <div class="start-box">
-
-        <h2>วิธีการเล่น</h2>
-
-        <p>
-            ตีตัวตุ่นโดยใช้นิ้วกดที่หน้าจอ
-            <br><br>
-
-            ตีตัวตุ่นสีเขียวให้ได้มากที่สุด
-            <br>
-
-            และหลีกเลี่ยงการตีตัวตุ่นสีแดง
-        </p>
-
-        <div class="score-guide">
-
-            <p>🟩 +10 คะแนน</p>
-
-            <p>🟥 -20 คะแนน</p>
-
-            <p>❌ กดพื้นที่ว่าง ❤️ ลดลง 1 ครั้ง</p>
+            </div>
 
         </div>
 
-        <button id="start-btn">
-            ▶ เริ่มเกม
-        </button>
+    </div>
+
+
+    <!-- =========================
+         Start Popup
+    ========================== -->
+
+    <div id="start-popup">
+
+        <div class="start-box">
+
+            <h2>
+                วิธีการเล่น
+            </h2>
+
+
+            <p>
+    ตีตัวตุ่นสีแดง (Target) ให้ได้มากที่สุด
+    <br>
+    และหลีกเลี่ยงตัวตุ่นสีเขียว (Distractor)
+</p>
+
+<div class="score-guide">
+
+    <p>🟥 +10 คะแนน</p>
+
+    <p>🟩 -20 คะแนน</p>
+
+    <p>❌ กดพื้นที่ว่าง ❤️ ลดลง 1 ครั้ง</p>
+
+</div>
+
+
+            <hr>
+
+
+            <!-- =========================
+                 Training Settings
+            ========================== -->
+
+            <h3>
+                ตั้งค่าการฝึก
+            </h3>
+
+
+            <!-- เลือกตาขี้เกียจ -->
+
+            <div class="setting-group">
+
+                <label>
+                    ตาขี้เกียจ
+                </label>
+
+                <br>
+
+                <label>
+                    <input
+                        type="radio"
+                        name="eye"
+                        value="left">
+
+                    ตาซ้าย
+                </label>
+
+
+                <label>
+                    <input
+                        type="radio"
+                        name="eye"
+                        value="right"
+                        checked>
+
+                    ตาขวา
+                </label>
+
+            </div>
+
+
+            <br>
+
+
+            <!-- =========================
+                 Red Target
+            ========================== -->
+
+            <div class="setting-group">
+
+                <label>
+
+                    ความเข้มสีแดง(ปิดตาขวา) ดู Target
+
+                    <span id="contrast-value">
+                        100%
+                    </span>
+
+                </label>
+
+
+                <input
+                    type="range"
+                    id="contrast-slider"
+                    min="10"
+                    max="100"
+                    value="100">
+
+            </div>
+
+
+            <!-- =========================
+                 Green Distractor
+            ========================== -->
+
+            <div class="setting-group">
+
+                <label>
+
+                    ความเข้มสีเขียว(ปิดตาซ้าย) ดู Distractor
+
+                    <span id="green-value">
+                        100%
+                    </span>
+
+                </label>
+
+
+                <input
+                    type="range"
+                    id="green-slider"
+                    min="10"
+                    max="100"
+                    value="100">
+
+            </div>
+
+
+            <br>
+
+
+            <!-- =========================
+                 Preview
+            ========================== -->
+
+            <div class="preview">
+
+                <div>
+
+                    Target
+
+                    <div id="target-preview"></div>
+
+                </div>
+
+
+                <div>
+
+                    Distractor
+
+                    <div id="distractor-preview"></div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Start -->
+
+            <button id="start-btn">
+                ▶ เริ่มเกม
+            </button>
+
+        </div>
 
     </div>
 
-</div>
 
-<div class="game-container" id="gameGrid">
+    <!-- =========================
+         Mole Game Board
+    ========================== -->
 
-    <div class="hole" data-index="0"></div>
-    <div class="hole" data-index="1"></div>
-    <div class="hole" data-index="2"></div>
-    <div class="hole" data-index="3"></div>
-    <div class="hole" data-index="4"></div>
-    <div class="hole" data-index="5"></div>
-    <div class="hole" data-index="6"></div>
-    <div class="hole" data-index="7"></div>
-    <div class="hole" data-index="8"></div>
+    <div
+        class="game-container"
+        id="gameGrid">
 
-</div>
+        <div
+            class="hole"
+            data-index="0">
+        </div>
+
+        <div
+            class="hole"
+            data-index="1">
+        </div>
+
+        <div
+            class="hole"
+            data-index="2">
+        </div>
+
+        <div
+            class="hole"
+            data-index="3">
+        </div>
+
+        <div
+            class="hole"
+            data-index="4">
+        </div>
+
+        <div
+            class="hole"
+            data-index="5">
+        </div>
+
+        <div
+            class="hole"
+            data-index="6">
+        </div>
+
+        <div
+            class="hole"
+            data-index="7">
+        </div>
+
+        <div
+            class="hole"
+            data-index="8">
+        </div>
+
+    </div>
+
 
     <script src="script.js"></script>
+
 </body>
+
 </html>
+
