@@ -355,19 +355,36 @@ function getDistractorColor() {
 }
 
 
-/* =========================
-   Apply Color Intensity
-========================= */
+// =====================================================
+// TARGET COLOR (RED)
+// ใช้สูตรเดียวกับ Catch Game
+// =====================================================
 
-function adjustSaturation(rgb, percent) {
+function getTargetColor() {
 
-    const intensity = percent / 100;
+    const r =
+        Math.round(
+            30 +
+            (targetContrast / 100) * 225
+        );
 
-    return {
-        r: Math.round(rgb.r * intensity),
-        g: Math.round(rgb.g * intensity),
-        b: Math.round(rgb.b * intensity)
-    };
+    return `rgb(${r},0,0)`;
+}
+
+
+// =====================================================
+// DISTRACTOR COLOR (GREEN)
+// =====================================================
+
+function getDistractorColor() {
+
+    const g =
+        Math.round(
+            30 +
+            (distractorContrast / 100) * 225
+        );
+
+    return `rgb(0,${g},0)`;
 }
 
 function rgbToString(rgb) {
