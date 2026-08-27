@@ -33,6 +33,7 @@ let distractorCaught = 0;
 let targetSpawned = 0;
 let distractorSpawned = 0;
 
+let targetMissed = 0;
 // เฉพาะ Level ปัจจุบัน
 let levelTargetCaught = 0;
 let levelTargetSpawned = 0;
@@ -75,11 +76,11 @@ let blocks = [];
 
 const speedMultiplier = [
 
-    1.0,   // Level 1 - ช้าที่สุด
-    1.2,   // Level 2
-    1.5,   // Level 3
-    2.0,   // Level 4
-    3.0    // Level 5 - เร็วที่สุด
+    1.5,   // Level 1 - ช้าที่สุด
+    2.0,   // Level 2
+    2.5,   // Level 3
+    3.0,   // Level 4
+    3.5    // Level 5 - เร็วที่สุด
 
 ];
 
@@ -89,15 +90,12 @@ const speedMultiplier = [
 // =====================================================
 
 const spawnInterval = [
-
-      3500,  // Level 1
-    3200,  // Level 2
-    3000,  // Level 3
-    2500,  // Level 4
-    2200   // Level 5
-
+    2800,  // Level 1
+    2500,  // Level 2
+    2200,  // Level 3
+    1900,  // Level 4
+    1600   // Level 5
 ];
-
 
 // =====================================================
 // TARGET / DISTRACTOR PATTERN
@@ -468,88 +466,172 @@ function startLevelTransition(nextLevel) {
 let lastSpawnTime = 0;
 
 
-function manageSpawning(
-    currentTime
-) {
+function manageSpawning(currentTime) {
 
     const speed =
-        speedMultiplier[
-            level - 1
-        ];
-
+        speedMultiplier[level - 1];
 
     const interval =
-        spawnInterval[
-            level - 1
-        ];
+        spawnInterval[level - 1];
 
 
     if (
-        currentTime -
-        lastSpawnTime >
+        currentTime - lastSpawnTime >
         interval
     ) {
 
+        // =========================================
+        // อัตราการเกิดเขียวพร้อมกับแดง
+        // =========================================
 
-        // ใช้ Pattern
-        // แทนการสุ่ม
+        const simultaneousRate = [
+            0.30,  // Level 1 = 30%
+            0.40,  // Level 2 = 40%
+            0.50,  // Level 3 = 50%
+            0.60,  // Level 4 = 60%
+            0.70   // Level 5 = 70%
+        ][level - 1];
+
+
+        // =========================================
+        // ระยะห่างขั้นต่ำตามขนาดหน้าจอ
+        // 25% ของความกว้าง Canvas
+        // =========================================
+
+        const minDistance =
+            canvas.width * 0.25;
+
+
+        // =========================================
+        // ใช้ Pattern เดิม
+        // =========================================
 
         const type =
             getNextType();
 
 
-        // ==============================
-        // TARGET
-        // ==============================
+        // =========================================
+        // TARGET 🔴
+        // =========================================
 
-        if (
-            type ===
-            "target"
-        ) {
+        if (type === "target") {
 
             targetSpawned++;
-
             levelTargetSpawned++;
+
+
+            // -----------------------------
+            // ตำแหน่งของแดง
+            // -----------------------------
+
+            const targetX =
+                Math.random() *
+                (canvas.width - 30);
+
+
+            blocks.push({
+
+                x: targetX,
+
+                y: -30,
+
+                size: 30,
+
+                type: "target",
+
+                speed: 2 * speed
+
+            });
+
+
+            // =================================
+            // สร้างเขียวพร้อมแดง
+            // =================================
+
+            if (
+                Math.random() <
+                simultaneousRate
+            ) {
+
+                distractorSpawned++;
+                levelDistractorSpawned++;
+
+
+                // -----------------------------
+                // หาตำแหน่งเขียว
+                // ให้ห่างจากแดงอย่างน้อย 25%
+                // ของความกว้างจอ
+                // -----------------------------
+
+                let greenX;
+
+
+                do {
+
+                    greenX =
+                        Math.random() *
+                        (canvas.width - 30);
+
+                } while (
+
+                    Math.abs(
+                        greenX - targetX
+                    ) < minDistance
+
+                );
+
+
+                blocks.push({
+
+                    x: greenX,
+
+                    y: -30,
+
+                    size: 30,
+
+                    type: "distractor",
+
+                    speed: 2 * speed
+
+                });
+
+            }
 
         }
 
 
-        // ==============================
-        // DISTRACTOR
-        // ==============================
+        // =========================================
+        // DISTRACTOR 🟢 เดี่ยว
+        // =========================================
 
-       else {
+        else {
 
-    distractorSpawned++;
-
-    // นับเขียวที่เกิดใน Level นี้
-    levelDistractorSpawned++;
-
-}
+            distractorSpawned++;
+            levelDistractorSpawned++;
 
 
-        // ==============================
-        // CREATE BLOCK
-        // ==============================
+            blocks.push({
 
-       blocks.push({
+                x:
+                    Math.random() *
+                    (canvas.width - 30),
 
-    x:
-        Math.random() *
-        (
-            canvas.width -
-            30
-        ),
+                y: -30,
 
-    y: -30,
+                size: 30,
 
-    size: 30,
+                type: "distractor",
 
-    type: type,
+                speed: 2 * speed
 
-    speed: 2 * speed
+            });
 
-});
+        }
+
+
+        // =========================================
+        // UPDATE SPAWN TIME
+        // =========================================
 
         lastSpawnTime =
             currentTime;
@@ -557,7 +639,6 @@ function manageSpawning(
     }
 
 }
-
 
 // =====================================================
 // UPDATE
@@ -649,11 +730,11 @@ if (isLevelTransition) {
 
                 const targetGoal = [
 
-                    10,
                      15,
                      20,
                      25,
-                     30
+                     30,
+                     40
 
                 ][level - 1];
 
@@ -700,12 +781,13 @@ if (isLevelTransition) {
 
 
         // ลบเมื่อตกพ้นจอ
-        if (
-            b.y > canvas.height
-        ) {
+        if (b.y > canvas.height) {
 
-            blocks.splice(i, 1);
+    if (b.type === "target") {
+        targetMissed++;
+    }
 
+    blocks.splice(i, 1);
         }
 
     }
@@ -1074,12 +1156,15 @@ function endGame() {
     // ACCURACY รวมทั้งเกม
     // =========================================
 
+    const totalTargetResponses =
+    targetCaught + targetMissed;
+
     const finalAccuracy =
-        targetSpawned === 0
-            ? 0
-            : Math.round(
-                (targetCaught / targetSpawned) * 100
-            );
+    totalTargetResponses === 0
+        ? 0
+        : Math.round(
+            (targetCaught / totalTargetResponses) * 100
+        );
 
     // =========================================
     // แสดงผลในหน้าสรุป
@@ -1096,6 +1181,9 @@ function endGame() {
 
     document.getElementById("final-red").innerText =
         `Distractor Caught : ${distractorCaught}`;
+
+    document.getElementById("final-missed").innerText =
+    `Target Missed : ${targetMissed}`;    
 
     document.getElementById("final-accuracy").innerText =
         `Target Detection : ${finalAccuracy}%`;
