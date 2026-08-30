@@ -580,3 +580,28 @@ body {
     }
 
 }
+
+/* =========================
+   Level Countdown
+========================= */
+
+#level-countdown {
+    position: fixed;
+
+    inset: 0;
+
+    display: none;
+
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(0,0,0,0.75);
+
+    color: white;
+
+    font-size: 90px;
+
+    font-weight: bold;
+
+    z-index: 9999;
+}
