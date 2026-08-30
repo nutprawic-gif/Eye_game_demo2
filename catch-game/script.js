@@ -730,11 +730,11 @@ if (isLevelTransition) {
 
                 const targetGoal = [
 
-                     15,
-                     20,
-                     25,
-                     30,
-                     40
+                    10,  // Level 1
+                    25,  // Level 2
+                    35,  // Level 3
+                    45,  // Level 4
+                    70   // Level 5
 
                 ][level - 1];
 
@@ -902,7 +902,7 @@ function draw() {
     // =================================================
 
     ctx.font =
-        "bold 24px sans-serif";
+        "bold 20px sans-serif";
 
 
     ctx.textAlign =
@@ -1065,7 +1065,7 @@ ctx.fillText(
     // ==============================
 
     ctx.font =
-        "bold 42px sans-serif";
+        "bold 38px sans-serif";
 
     ctx.fillText(
         `LEVEL ${transitionLevel}`,
@@ -1079,7 +1079,7 @@ ctx.fillText(
     // ==============================
 
     ctx.font =
-        "bold 24px sans-serif";
+        "bold 20px sans-serif";
 
     ctx.fillText(
         "เตรียมตัวให้พร้อม",
@@ -1102,7 +1102,7 @@ ctx.fillText(
     countdownEndTime - now;
 
     ctx.font =
-    "bold 60px sans-serif";
+    "bold 58px sans-serif";
 
     if (remaining > 0) {
 
