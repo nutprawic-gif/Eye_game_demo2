@@ -37,6 +37,7 @@ let distractorSpawned = 0;
 let targetCaught = 0;
 let distractorCaught = 0;
 
+let targetMissed = 0;   
 let mistakes = 0;
 
 let isGameOver = false;
@@ -309,29 +310,48 @@ function createMoleInHole( targetHole,forcedType = null)
         ตัวตุ่นอยู่ตามเวลาของ Level
     */
 
+   setTimeout(() => {
+
+    /*
+        ถ้าตุ่นถูกกดไปแล้ว
+        หรือถูกลบตอนเปลี่ยน Level
+        จะไม่มี parentNode
+        จึงไม่ถือว่าพลาด
+    */
+
+    if (!mole.parentNode) return;
+
+
+    /*
+        ถ้าเป็น Target สีแดง
+        และหมดเวลาโดยไม่ได้กด
+        = Target Missed
+    */
+
+    if (mole.dataset.type === "target") {
+
+        targetMissed++;
+
+    }
+
+
+    mole.classList.remove("active");
+
+
     setTimeout(() => {
 
-        if (!mole.parentNode) return;
+        if (mole.parentNode) {
+
+            mole.remove();
+
+        }
+
+    }, 150);
 
 
-        mole.classList.remove("active");
+}, moleLifetime);
 
-
-        setTimeout(() => {
-
-            if (mole.parentNode) {
-
-                mole.remove();
-
-            }
-
-        }, 150);
-
-
-    }, moleLifetime);
 }
-
-
 // =====================================================
 // TARGET COLOR (RED)
 // ใช้สูตรเดียวกับ Catch Game
@@ -539,6 +559,9 @@ function endGame(msg) {
     ).innerText =
         `Target Caught : ${targetCaught}`;
 
+        document.getElementById( 
+            "final-missed" 
+    ).innerText = `Target Missed : ${targetMissed}`;
 
     document.getElementById(
         "final-red"
@@ -587,6 +610,7 @@ startBtn.addEventListener(
         targetCaught = 0;
         distractorCaught = 0;
 
+        targetMissed = 0;
         mistakes = 0;
 
         timeLeft = gameDuration;
