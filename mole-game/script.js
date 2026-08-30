@@ -64,6 +64,8 @@ let distractorContrast = 100;
 
 let spawnInterval = 5000;
 let moleLifetime = 5000;
+let isLevelTransition = false;
+let transitionTimeout;
 
 
 /* สีแดง Target */
@@ -86,41 +88,26 @@ const greenColor = {
 
 function updateDifficulty() {
 
-    /*
-        Level เพิ่มทุก ๆ 15 Target ที่จับได้
-
-        1 = 0-14
-        2 = 15-29
-        3 = 30-44
-        4 = 45-59
-        5 = 60+
-    */
-
-    level = Math.min(
-        5,
-        Math.floor(targetCaught / 15) + 1
-    );
-
-
+    
     /* Spawn interval */
 
     spawnInterval = [
+        6000,
+        5500,
         5000,
-        4000,
-        3000,
-        2000,
-        1000
+        4500,
+        4000
     ][level - 1];
 
 
     /* Mole lifetime */
 
     moleLifetime = [
+        6000,
+        5500,
         5000,
-        4000,
-        3000,
-        2000,
-        1000
+        4500,
+        4000
     ][level - 1];
 
 
@@ -203,19 +190,36 @@ function checkAllHoles() {
 
     if (isGameOver) return;
 
-
     holes.forEach(hole => {
 
-        /*
-            ไม่สร้างตัวใหม่ถ้าหลุมนี้
-            มีตัวตุ่นอยู่แล้ว
-        */
-
-        if (!hole.querySelector(".mole")) {
-
-            createMoleInHole(hole);
-
+        if (hole.querySelector(".mole")) {
+            return;
         }
+
+        // =====================================
+        // Level 4-5
+        // จำกัด Target สีแดงสูงสุด 3 ตัว
+        // =====================================
+
+        if (level >= 4) {
+
+            const currentTargets =
+                document.querySelectorAll(
+                    '.mole[data-type="target"]'
+                ).length;
+
+            if (currentTargets >= 3) {
+
+                createMoleInHole(
+                    hole,
+                    "distractor"
+                );
+
+                return;
+            }
+        }
+
+        createMoleInHole(hole);
 
     });
 }
@@ -225,7 +229,8 @@ function checkAllHoles() {
    Create Mole
 ========================= */
 
-function createMoleInHole(targetHole) {
+function createMoleInHole( targetHole,forcedType = null) 
+{
 
     if (isGameOver) return;
 
@@ -243,7 +248,9 @@ function createMoleInHole(targetHole) {
     */
 
     const isTarget =
-        Math.random() < 0.3;
+    forcedType
+        ? forcedType === "target"
+        : Math.random() < 0.3;
 
 
     mole.dataset.type =
@@ -325,36 +332,6 @@ function createMoleInHole(targetHole) {
 }
 
 
-/* =========================
-   Target Color (red)
-========================= */
-
-function getTargetColor() {
-
-    return rgbToString(
-        adjustSaturation(
-            redColor,
-            targetContrast
-        )
-    );
-}
-
-
-/* =========================
-   Distractor Color (Green)
-========================= */
-
-function getDistractorColor() {
-
-    return rgbToString(
-        adjustSaturation(
-            greenColor,
-            distractorContrast
-        )
-    );
-}
-
-
 // =====================================================
 // TARGET COLOR (RED)
 // ใช้สูตรเดียวกับ Catch Game
@@ -398,23 +375,22 @@ function rgbToString(rgb) {
 
 function handleWhack() {
 
-    if (isGameOver) return;
+    if (isGameOver || isLevelTransition) return;
 
 
     const mole =
         this.querySelector(".mole.active");
 
 
-    /*
-        กดพื้นที่ว่าง
-    */
+    /* =========================
+       กดพื้นที่ว่าง
+    ========================= */
 
     if (!mole) {
 
         mistakes++;
 
         updateLives();
-
 
         if (mistakes >= 3) {
 
@@ -428,11 +404,9 @@ function handleWhack() {
 
     /* =========================
        Target
-    ========================== */
+    ========================= */
 
-    if (
-        mole.dataset.type === "target"
-    ) {
+    if (mole.dataset.type === "target") {
 
         targetCaught++;
 
@@ -440,10 +414,9 @@ function handleWhack() {
 
     }
 
-
     /* =========================
        Distractor
-    ========================== */
+    ========================= */
 
     else {
 
@@ -454,20 +427,41 @@ function handleWhack() {
     }
 
 
-    hitsDisplay.innerText =
-        score;
-
+    hitsDisplay.innerText = score;
 
     mole.remove();
 
 
-    /*
-        อัปเดต Level
-    */
+    /* =========================
+       Check Level Up
+    ========================= */
+
+    let nextLevel = level;
+
+    if (targetCaught >= 75) {
+        nextLevel = 5;
+    }
+    else if (targetCaught >= 60) {
+        nextLevel = 4;
+    }
+    else if (targetCaught >= 45) {
+        nextLevel = 3;
+    }
+    else if (targetCaught >= 30) {
+        nextLevel = 2;
+    }
+
+
+    if (nextLevel > level) {
+
+        startLevelTransition(nextLevel);
+
+        return;
+    }
+
 
     updateDifficulty();
 }
-
 
 /* =========================
    Lives
@@ -680,6 +674,131 @@ if (contrastSlider) {
 
 }
 
+/* =========================
+   Level Countdown
+========================= */
+
+let levelCountdown = document.createElement("div");
+
+levelCountdown.id = "level-countdown";
+
+levelCountdown.style.position = "fixed";
+levelCountdown.style.top = "0";
+levelCountdown.style.left = "0";
+levelCountdown.style.width = "100%";
+levelCountdown.style.height = "100%";
+
+levelCountdown.style.display = "none";
+levelCountdown.style.alignItems = "center";
+levelCountdown.style.justifyContent = "center";
+
+levelCountdown.style.background = "rgba(0,0,0,0.75)";
+levelCountdown.style.zIndex = "9999";
+
+levelCountdown.style.fontSize = "80px";
+levelCountdown.style.fontWeight = "bold";
+levelCountdown.style.color = "white";
+
+document.body.appendChild(levelCountdown);
+/* =========================
+   Level Transition
+========================= */
+
+function startLevelTransition(nextLevel) {
+
+    isLevelTransition = true;
+
+    clearInterval(gameInterval);
+
+    /* =========================
+       เอาตุ่นที่เหลือออก
+    ========================= */
+
+    holes.forEach(hole => {
+
+        const mole = hole.querySelector(".mole");
+
+        if (mole) {
+            mole.remove();
+        }
+
+    });
+
+
+    /* =========================
+       แสดง Level ใหม่
+    ========================= */
+
+    level = nextLevel;
+
+    levelDisplay.innerText =
+        "Level " + level;
+
+
+    /* =========================
+       แสดง Countdown
+       Level 2
+       3
+       2
+       1
+    ========================= */
+
+    levelCountdown.style.display = "flex";
+
+
+    /* แสดง Level 2 */
+
+    levelCountdown.innerText =
+        `Level ${nextLevel}`;
+
+
+    /* หลังจาก 1 วินาที → 3 */
+
+    transitionTimeout = setTimeout(() => {
+
+        levelCountdown.innerText = "3";
+
+
+        /* หลังจากอีก 1 วินาที → 2 */
+
+        transitionTimeout = setTimeout(() => {
+
+            levelCountdown.innerText = "2";
+
+
+            /* หลังจากอีก 1 วินาที → 1 */
+
+            transitionTimeout = setTimeout(() => {
+
+                levelCountdown.innerText = "1";
+
+
+                /* หลังจากอีก 1 วินาที → เริ่มเกม */
+
+                transitionTimeout = setTimeout(() => {
+
+                    levelCountdown.style.display = "none";
+
+                    isLevelTransition = false;
+
+
+                    /* ตั้งค่าความยากของ Level ใหม่ */
+
+                    updateDifficulty();
+
+
+                    /* สร้างตุ่น */
+
+                    checkAllHoles();
+
+                }, 1000);
+
+            }, 1000);
+
+        }, 1000);
+
+    }, 1000);
+}
 
 /* =========================
    Green Slider
