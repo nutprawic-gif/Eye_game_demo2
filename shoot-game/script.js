@@ -38,6 +38,7 @@ let level = 1;
 
 let targetSpawned = 0;
 let targetCaught = 0;
+let targetMissed = 0;
 
 let distractorSpawned = 0;
 let distractorCaught = 0;
@@ -403,11 +404,24 @@ function update() {
 
     statusMsg.innerText = "TIME UP!";
 
+    // =========================
+    // Accuracy
+    // =========================
+    // 🔴 Target Caught = ถูก
+    // 🔴 Target Missed = ผิด
+    // 🟢 Distractor Caught = ผิด
+    // 🟢 Distractor ที่ไม่ยิง = ไม่คิด
+
+    const totalAttempts =
+        targetCaught +
+        targetMissed +
+        distractorCaught;
+
     const detection =
-        targetSpawned === 0
+        totalAttempts === 0
             ? 0
             : Math.round(
-                (targetCaught / targetSpawned) * 100
+                (targetCaught / totalAttempts) * 100
             );
 
     document.getElementById('final-level').innerText =
@@ -418,6 +432,9 @@ function update() {
 
     document.getElementById('final-target').innerText =
         `Target Caught : ${targetCaught}`;
+        
+    document.getElementById('final-target-missed').innerText =
+    `Target Missed : ${targetMissed}`;
 
     document.getElementById('final-distractor').innerText =
         `Distractor Caught : ${distractorCaught}`;
@@ -432,11 +449,21 @@ function update() {
 }
 
     for (let i = targets.length - 1; i >= 0; i--) {
-        targets[i].update(dt);
-        if (targets[i].life <= 0) {
-            targets.splice(i, 1);
+
+    targets[i].update(dt);
+
+    if (targets[i].life <= 0) {
+
+        // ถ้าเป็น Target สีแดง
+        // และหมดเวลาโดยไม่ได้กด
+        // = Target Missed
+        if (targets[i].type === 'good') {
+            targetMissed++;
         }
+
+        targets.splice(i, 1);
     }
+}
     
     maintainTargets(dt);
 
@@ -472,6 +499,7 @@ function startGame() {
 
     targetSpawned = 0;
     targetCaught = 0;
+    targetMissed = 0;
 
     distractorSpawned = 0;
     distractorCaught = 0;
