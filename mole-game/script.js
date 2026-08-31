@@ -457,13 +457,13 @@ function handleWhack() {
 
     let nextLevel = level;
 
-    if (targetCaught >= 75) {
+    if (targetCaught >= 180) {
         nextLevel = 5;
     }
-    else if (targetCaught >= 60) {
+    else if (targetCaught >= 120) {
         nextLevel = 4;
     }
-    else if (targetCaught >= 45) {
+    else if (targetCaught >= 70) {
         nextLevel = 3;
     }
     else if (targetCaught >= 30) {
