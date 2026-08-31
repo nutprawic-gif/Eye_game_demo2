@@ -40,6 +40,8 @@ let targetSpawned = 0;
 let targetCaught = 0;
 let targetMissed = 0;
 
+let levelTargetCaught = 0;
+
 let distractorSpawned = 0;
 let distractorCaught = 0;
 
@@ -48,7 +50,12 @@ let particles = [];
 
 let lastTime = Date.now();
 
-const TARGETS_PER_LEVEL = 15;
+const TARGET_GOAL = [
+    25,  // Lv1 → Lv2
+    50,  // Lv2 → Lv3
+    75,  // Lv3 → Lv4
+    80   // Lv4 → Lv5
+];
 const MAX_LEVEL = 5;
 
 const SPAWN_DELAY = 1.5;
@@ -121,11 +128,11 @@ class Target {
 if (type === 'good') {
     // 🔴 Target
     speedBase = [
-        3,
-        5,
-        7,
-        9,
-        11
+        4,
+        6,
+        8,
+        10,
+        12
     ][level - 1];
 
 } else {
@@ -285,7 +292,7 @@ function handleInput(ex, ey) {
             if (t.type === 'good') {
 
                 targetCaught++;
-
+                levelTargetCaught++;
                 score += 10 * combo;
 
                 combo++;
@@ -351,19 +358,21 @@ function createParticles(x, y, color) {
 
 function updateLevel() {
 
-    level = Math.min(
-        MAX_LEVEL,
-        Math.floor(targetCaught / TARGETS_PER_LEVEL) + 1
-    );
+    if (
+        level < MAX_LEVEL &&
+        levelTargetCaught >= TARGET_GOAL[level - 1]
+    ) {
+
+        level++;
+
+        // เริ่มนับใหม่เมื่อขึ้น Level
+        levelTargetCaught = 0;
+    }
 
     if (levelDisplay) {
-
-        levelDisplay.innerText =
-            `Level ${level}`;
-
+        levelDisplay.innerText = `Level ${level}`;
     }
 }
-
 function updateUI() {
 
     scoreDisplay.innerText = score;
@@ -501,6 +510,8 @@ function startGame() {
     targetCaught = 0;
     targetMissed = 0;
 
+    levelTargetCaught = 0;
+
     distractorSpawned = 0;
     distractorCaught = 0;
 
@@ -563,3 +574,22 @@ window.addEventListener('resize', () => {
     }
 
 });
+
+
+// =========================
+// Restart & Main Menu
+// =========================
+
+const restartBtn = document.getElementById('restart-btn');
+const homeBtn = document.getElementById('home-btn');
+
+// Restart
+restartBtn.addEventListener('click', function () {
+    location.reload();
+});
+
+// Main Menu
+homeBtn.addEventListener('click', function () {
+    window.location.href = '../index.html';
+});
+
