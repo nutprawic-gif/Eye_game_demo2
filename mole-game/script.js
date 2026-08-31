@@ -406,20 +406,19 @@ function handleWhack() {
        กดพื้นที่ว่าง
     ========================= */
 
-    if (!mole) {
+   if (!mole) {
 
-        mistakes++;
+    mistakes++;
 
-        updateLives();
+    updateLives();
 
-        if (mistakes >= 3) {
-
-            endGame("GAME OVER");
-
-        }
-
+    if (mistakes >= 3) {
+        endGame("GAME OVER");
         return;
     }
+
+    return;
+}
 
 
     /* =========================
@@ -507,76 +506,41 @@ function updateLives() {
 
 function endGame(msg) {
 
-    if (isGameOver) return;
-
-
+    // หยุดเกมทันที
     isGameOver = true;
-
 
     clearInterval(gameInterval);
     clearInterval(countdownInterval);
 
-
     statusMsg.innerText = msg;
-
-
-    /*
-        Target Detection
-
-        Target Caught
-        ÷
-        Target Spawned
-    */
 
     const detection =
         targetSpawned === 0
             ? 0
             : Math.round(
-                (targetCaught /
-                    targetSpawned) *
-                100
+                (targetCaught / targetSpawned) * 100
             );
 
-
-    /* =========================
-       Final Result
-    ========================== */
-
-    document.getElementById(
-        "final-level"
-    ).innerText =
+    document.getElementById("final-level").innerText =
         `Level : ${level}/5`;
 
-
-    document.getElementById(
-        "final-score"
-    ).innerText =
+    document.getElementById("final-score").innerText =
         `Score : ${score}`;
 
-
-    document.getElementById(
-        "final-green"
-    ).innerText =
+    document.getElementById("final-green").innerText =
         `Target Caught : ${targetCaught}`;
 
-        document.getElementById( 
-            "final-missed" 
-    ).innerText = `Target Missed : ${targetMissed}`;
+    document.getElementById("final-missed").innerText =
+        `Target Missed : ${targetMissed}`;
 
-    document.getElementById(
-        "final-red"
-    ).innerText =
+    document.getElementById("final-red").innerText =
         `Distractor Caught : ${distractorCaught}`;
 
-
-    document.getElementById(
-        "final-accuracy"
-    ).innerText =
+    document.getElementById("final-accuracy").innerText =
         `Target Detection : ${detection}%`;
 
-
-    overlay.style.display =
-        "flex";
+    // แสดงหน้าสรุป
+    overlay.style.display = "flex";
 }
 
 
