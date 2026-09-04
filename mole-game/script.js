@@ -1,1146 +1,537 @@
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const overlay = document.getElementById('overlay');
+const holes = document.querySelectorAll(".hole");
+
+const hitsDisplay = document.getElementById("score");
+const livesDisplay = document.getElementById("lives");
+const overlay = document.getElementById("overlay");
+const statusMsg = document.getElementById("status-msg");
+const timerDisplay = document.getElementById("timer");
+const levelDisplay = document.getElementById("level");
+
+const startPopup = document.getElementById("start-popup");
+const startBtn = document.getElementById("start-btn");
+
+const restartBtn = document.getElementById("restart-btn");
+const homeBtn = document.getElementById("home-btn");
+
+const contrastSlider = document.getElementById("contrast-slider");
+const greenSlider = document.getElementById("green-slider");
+
+const contrastValue = document.getElementById("contrast-value");
+const greenValue = document.getElementById("green-value");
+
+const targetPreview = document.getElementById("target-preview");
+const distractorPreview = document.getElementById("distractor-preview");
+
+
+/* =========================
+   Game Variables
+========================= */
 
 let score = 0;
-let gameStarted = false;
-let isGameOver = false;
 
 let level = 1;
-const maxLevel = 5;
-
-
-// =====================================================
-// LEVEL TRANSITION
-// =====================================================
-
-let isLevelTransition = false;
-let transitionLevel = 1;
-let transitionEndTime = 0;
-
-const transitionDuration = 3000; // 3 วินาที
-const startMessageDuration = 1500; // "เริ่ม!" ค้าง 1.5 วินาที
-
-
-// =====================================================
-// SCORE / STATISTICS
-// =====================================================
-
-// รวมทั้งเกม
-let targetCaught = 0;
-let distractorCaught = 0;
 
 let targetSpawned = 0;
 let distractorSpawned = 0;
 
-let targetMissed = 0;
-// เฉพาะ Level ปัจจุบัน
-let levelTargetCaught = 0;
-let levelTargetSpawned = 0;
+let targetCaught = 0;
+let distractorCaught = 0;
 
-let levelDistractorCaught = 0;
-let levelDistractorSpawned = 0;
+let targetMissed = 0;   
+let mistakes = 0;
 
-// =====================================================
-// GAME TIME
-// =====================================================
+let isGameOver = false;
 
-let startTime = 0;
+let gameInterval;
+let countdownInterval;
 
 const gameDuration = 10 * 60;
+let timeLeft = gameDuration;
 
 
-// =====================================================
-// PLAYER
-// =====================================================
+/* =========================
+   Training Settings
+========================= */
 
-const player = {
+let selectedEye = "right";
 
-    width: 90,
-    height: 15,
+let targetContrast = 100;
+let distractorContrast = 100;
 
-    x: 0,
-    y: 0,
 
-    color: '#FFFFFF'
+/* =========================
+   Difficulty
+========================= */
 
+let spawnInterval = 5000;
+let moleLifetime = 5000;
+let isLevelTransition = false;
+let transitionTimeout;
+
+
+/* สีแดง Target */
+const redColor = {
+    r: 255,
+    g: 0,
+    b: 0
+}
+/* สีเขียว Distractor */
+const greenColor = {
+    r: 0,
+    g: 180,
+    b: 70
 };
 
 
-let blocks = [];
+/* =========================
+   Level Difficulty
+========================= */
+
+function updateDifficulty() {
+
+    
+    /* Spawn interval */
+
+    spawnInterval = [
+        6000,
+        5500,
+        5000,
+        4500,
+        4000
+    ][level - 1];
 
 
-// =====================================================
-// LEVEL SPEED
-// =====================================================
+    /* Mole lifetime */
 
-const speedMultiplier = [
-
-    1.5,   // Level 1 - ช้าที่สุด
-    2.0,   // Level 2
-    2.5,   // Level 3
-    3.0,   // Level 4
-    3.5    // Level 5 - เร็วที่สุด
-
-];
+    moleLifetime = [
+        6000,
+        5500,
+        5000,
+        4500,
+        4000
+    ][level - 1];
 
 
-// =====================================================
-// SPAWN INTERVAL
-// =====================================================
+    clearInterval(gameInterval);
 
-const spawnInterval = [
-    2800,  // Level 1
-    2500,  // Level 2
-    2200,  // Level 3
-    1900,  // Level 4
-    1600   // Level 5
-];
-
-// =====================================================
-// TARGET / DISTRACTOR PATTERN
-// =====================================================
-
-// แดงประมาณ 70%
-// เขียวประมาณ 30%
-
-const spawnPattern = [
-
-    "target",
-    "target",
-    "distractor",
-    "target",
-    "target",
-    "distractor",
-    "target",
-    "target",
-    "target",
-    "distractor"
-
-];
-
-let patternIndex = 0;
+    gameInterval = setInterval(
+        checkAllHoles,
+        spawnInterval
+    );
 
 
-function getNextType() {
-
-    const type =
-        spawnPattern[patternIndex];
-
-    patternIndex++;
-
-    if (
-        patternIndex >=
-        spawnPattern.length
-    ) {
-
-        patternIndex = 0;
-
-    }
-
-    return type;
-
+    levelDisplay.innerText =
+        "Level " + level;
 }
 
 
-// =====================================================
-// RED CONTRAST
-// =====================================================
+/* =========================
+   Start / Init
+========================= */
 
-const slider =
-    document.getElementById("contrast-slider");
+function init() {
 
-const value =
-    document.getElementById("contrast-value");
-
-let contrast = 100;
+    clearInterval(gameInterval);
+    clearInterval(countdownInterval);
 
 
-slider.addEventListener(
-    "input",
-    () => {
+    hitsDisplay.innerText = score;
 
-        contrast =
-            Number(slider.value);
+    updateLives();
 
-        value.innerText =
-            contrast + "%";
+    updateTimer();
 
-        updatePreview();
+    updateDifficulty();
+
+
+    countdownInterval = setInterval(() => {
+
+        if (isGameOver) return;
+
+        timeLeft--;
+
+        updateTimer();
+
+
+        if (timeLeft <= 0) {
+
+            endGame("TIME UP!");
+
+        }
+
+    }, 1000);
+}
+
+
+/* =========================
+   Timer
+========================= */
+
+function updateTimer() {
+
+    const minutes =
+        Math.floor(timeLeft / 60);
+
+    const seconds =
+        timeLeft % 60;
+
+
+    timerDisplay.innerText =
+        `Time: ${minutes}:${seconds
+            .toString()
+            .padStart(2, "0")}`;
+}
+
+
+/* =========================
+   Spawn Mole
+========================= */
+
+function checkAllHoles() {
+
+    if (isGameOver) return;
+
+    holes.forEach(hole => {
+
+        if (hole.querySelector(".mole")) {
+            return;
+        }
+
+        // =====================================
+        // Level 4-5
+        // จำกัด Target สีแดงสูงสุด 3 ตัว
+        // =====================================
+
+        if (level >= 4) {
+
+            const currentTargets =
+                document.querySelectorAll(
+                    '.mole[data-type="target"]'
+                ).length;
+
+            if (currentTargets >= 3) {
+
+                createMoleInHole(
+                    hole,
+                    "distractor"
+                );
+
+                return;
+            }
+        }
+
+        createMoleInHole(hole);
+
+    });
+}
+
+
+/* =========================
+   Create Mole
+========================= */
+
+function createMoleInHole( targetHole,forcedType = null) 
+{
+
+    if (isGameOver) return;
+
+
+    const mole =
+        document.createElement("div");
+
+
+    mole.classList.add("mole");
+
+
+    /*
+        30% = Target สีแดง
+        70% = Distractor สีเขียว
+    */
+
+    const isTarget =
+    forcedType
+        ? forcedType === "target"
+        : Math.random() < 0.3;
+
+
+    mole.dataset.type =
+        isTarget
+            ? "target"
+            : "distractor";
+
+
+    /* =========================
+       Target
+    ========================== */
+
+    if (isTarget) {
+
+        targetSpawned++;
+
+
+        mole.style.backgroundColor =
+            getTargetColor();
 
     }
-);
 
+
+    /* =========================
+       Distractor
+    ========================== */
+
+    else {
+
+        distractorSpawned++;
+
+
+        mole.style.backgroundColor =
+            getDistractorColor();
+
+    }
+
+
+    targetHole.appendChild(mole);
+
+
+    /*
+        Animation โผล่ขึ้นมา
+    */
+
+    setTimeout(() => {
+
+        if (!mole.parentNode) return;
+
+        mole.classList.add("active");
+
+    }, 100);
+
+
+    /*
+        ตัวตุ่นอยู่ตามเวลาของ Level
+    */
+
+   setTimeout(() => {
+
+    /*
+        ถ้าตุ่นถูกกดไปแล้ว
+        หรือถูกลบตอนเปลี่ยน Level
+        จะไม่มี parentNode
+        จึงไม่ถือว่าพลาด
+    */
+
+    if (!mole.parentNode) return;
+
+
+    /*
+        ถ้าเป็น Target สีแดง
+        และหมดเวลาโดยไม่ได้กด
+        = Target Missed
+    */
+
+    if (mole.dataset.type === "target") {
+
+        targetMissed++;
+
+    }
+
+
+    mole.classList.remove("active");
+
+
+    setTimeout(() => {
+
+        if (mole.parentNode) {
+
+            mole.remove();
+
+        }
+
+    }, 150);
+
+
+}, moleLifetime);
+
+}
+// =====================================================
+// TARGET COLOR (RED)
+// ใช้สูตรเดียวกับ Catch Game
+// =====================================================
 
 function getTargetColor() {
 
-    const r = Math.round(
-        30 + (contrast / 100) * 225
-    );
+    const r =
+        Math.round(
+            30 +
+            (targetContrast / 100) * 225
+        );
 
     return `rgb(${r},0,0)`;
 }
 
 
 // =====================================================
-// GREEN CONTRAST
+// DISTRACTOR COLOR (GREEN)
 // =====================================================
-
-const greenSlider =
-    document.getElementById("green-slider");
-
-const greenValue =
-    document.getElementById("green-value");
-
-let greenContrast = 100;
-
-
-greenSlider.addEventListener(
-    "input",
-    () => {
-
-        greenContrast =
-            Number(greenSlider.value);
-
-        greenValue.innerText =
-            greenContrast + "%";
-
-        updatePreview();
-
-    }
-);
-
 
 function getDistractorColor() {
 
-    const g = Math.round(
-        30 + (greenContrast / 100) * 225
-    );
+    const g =
+        Math.round(
+            30 +
+            (distractorContrast / 100) * 225
+        );
 
     return `rgb(0,${g},0)`;
 }
 
+function rgbToString(rgb) {
 
-// =====================================================
-// PREVIEW
-// =====================================================
-
-function updatePreview() {
-
-    document.getElementById(
-        "target-preview"
-    ).style.backgroundColor =
-        getTargetColor();
-
-
-    document.getElementById(
-        "distractor-preview"
-    ).style.backgroundColor =
-        getDistractorColor();
-
+    return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
 }
 
+/* =========================
+   Whack
+========================= */
 
-updatePreview();
+function handleWhack() {
 
-// =====================================================
-// INIT
-// =====================================================
-
-function init() {
-
-    canvas.width =
-        window.innerWidth;
-
-    canvas.height =
-        window.innerHeight;
+    if (isGameOver || isLevelTransition) return;
 
 
-    player.x =
-        canvas.width / 2 -
-        player.width / 2;
+    const mole =
+        this.querySelector(".mole.active");
 
 
-    player.y =
-        canvas.height - 70;
+    /* =========================
+       กดพื้นที่ว่าง
+    ========================= */
 
-}
+   if (!mole) {
 
+    mistakes++;
 
-// =====================================================
-// PLAYER MOVEMENT
-// =====================================================
+    updateLives();
 
-function handleMove(clientX) {
-
-    if (isGameOver) {
+    if (mistakes >= 3) {
+        endGame("GAME OVER");
         return;
     }
-
-
-    player.x =
-        clientX -
-        player.width / 2;
-
-
-    if (player.x < 0) {
-
-        player.x = 0;
-
-    }
-
-
-    if (
-        player.x >
-        canvas.width -
-        player.width
-    ) {
-
-        player.x =
-            canvas.width -
-            player.width;
-
-    }
-
-}
-
-
-// =====================================================
-// TOUCH MOVE
-// =====================================================
-
-window.addEventListener(
-    'touchmove',
-    (e) => {
-
-        // ถ้ากำลังลาก Slider
-        // ไม่ควบคุมเกม
-
-        if (
-            e.target.type ===
-            "range"
-        ) {
-
-            return;
-
-        }
-
-
-        handleMove(
-            e.touches[0].clientX
-        );
-
-
-        e.preventDefault();
-
-    },
-    {
-        passive: false
-    }
-);
-
-
-// =====================================================
-// TOUCH START
-// =====================================================
-
-canvas.addEventListener(
-    'touchstart',
-    (e) => {
-
-        if (
-            isGameOver ||
-            !gameStarted
-        ) {
-
-            return;
-
-        }
-
-
-        handleMove(
-            e.touches[0].clientX
-        );
-
-    },
-    {
-        passive: true
-    }
-);
-
-
-// =====================================================
-// MOUSE
-// =====================================================
-
-window.addEventListener(
-    'mousemove',
-    (e) => {
-
-        handleMove(
-            e.clientX
-        );
-
-    }
-);
-
-
-// =====================================================
-// LEVEL TRANSITION
-// =====================================================
-
-function startLevelTransition(nextLevel) {
-
-    if (nextLevel > maxLevel) {
-        return;
-    }
-
-    console.log("LEVEL TRANSITION →", nextLevel);
-
-    // เปลี่ยน Level
-    level = nextLevel;
-
-    // เปิดโหมดพัก
-    isLevelTransition = true;
-
-    transitionLevel = nextLevel;
-
-    // 3 วินาที
-    transitionEndTime =
-    Date.now()+transitionDuration+startMessageDuration;
-
-    // =========================================
-    // หยุดตุ่นทั้งหมดทันที
-    // =========================================
-
-    blocks = [];
-
-    // =========================================
-    // เริ่ม pattern ใหม่
-    // =========================================
-
-    patternIndex = 0;
-
-   // =========================================
-   // reset สถิติของ level ใหม่
-   // =========================================
-
-    levelTargetCaught = 0;
-    levelTargetSpawned = 0;
-
-    levelDistractorCaught = 0;
-    levelDistractorSpawned = 0;
-    // =========================================
-    // ห้าม spawn ทันที
-    // =========================================
-
-    lastSpawnTime = performance.now();
-
-}
-
-
-// =====================================================
-// SPAWNING
-// =====================================================
-
-let lastSpawnTime = 0;
-
-
-function manageSpawning(currentTime) {
-
-    const speed =
-        speedMultiplier[level - 1];
-
-    const interval =
-        spawnInterval[level - 1];
-
-
-    if (
-        currentTime - lastSpawnTime >
-        interval
-    ) {
-
-        // =========================================
-        // อัตราการเกิดเขียวพร้อมกับแดง
-        // =========================================
-
-        const simultaneousRate = [
-            0.30,  // Level 1 = 30%
-            0.40,  // Level 2 = 40%
-            0.50,  // Level 3 = 50%
-            0.60,  // Level 4 = 60%
-            0.70   // Level 5 = 70%
-        ][level - 1];
-
-
-        // =========================================
-        // ระยะห่างขั้นต่ำตามขนาดหน้าจอ
-        // 25% ของความกว้าง Canvas
-        // =========================================
-
-        const minDistance =
-            canvas.width * 0.25;
-
-
-        // =========================================
-        // ใช้ Pattern เดิม
-        // =========================================
-
-        const type =
-            getNextType();
-
-
-        // =========================================
-        // TARGET 🔴
-        // =========================================
-
-        if (type === "target") {
-
-            targetSpawned++;
-            levelTargetSpawned++;
-
-
-            // -----------------------------
-            // ตำแหน่งของแดง
-            // -----------------------------
-
-            const targetX =
-                Math.random() *
-                (canvas.width - 30);
-
-
-            blocks.push({
-
-                x: targetX,
-
-                y: -30,
-
-                size: 30,
-
-                type: "target",
-
-                speed: 2 * speed
-
-            });
-
-
-            // =================================
-            // สร้างเขียวพร้อมแดง
-            // =================================
-
-            if (
-                Math.random() <
-                simultaneousRate
-            ) {
-
-                distractorSpawned++;
-                levelDistractorSpawned++;
-
-
-                // -----------------------------
-                // หาตำแหน่งเขียว
-                // ให้ห่างจากแดงอย่างน้อย 25%
-                // ของความกว้างจอ
-                // -----------------------------
-
-                let greenX;
-
-
-                do {
-
-                    greenX =
-                        Math.random() *
-                        (canvas.width - 30);
-
-                } while (
-
-                    Math.abs(
-                        greenX - targetX
-                    ) < minDistance
-
-                );
-
-
-                blocks.push({
-
-                    x: greenX,
-
-                    y: -30,
-
-                    size: 30,
-
-                    type: "distractor",
-
-                    speed: 2 * speed
-
-                });
-
-            }
-
-        }
-
-
-        // =========================================
-        // DISTRACTOR 🟢 เดี่ยว
-        // =========================================
-
-        else {
-
-            distractorSpawned++;
-            levelDistractorSpawned++;
-
-
-            blocks.push({
-
-                x:
-                    Math.random() *
-                    (canvas.width - 30),
-
-                y: -30,
-
-                size: 30,
-
-                type: "distractor",
-
-                speed: 2 * speed
-
-            });
-
-        }
-
-
-        // =========================================
-        // UPDATE SPAWN TIME
-        // =========================================
-
-        lastSpawnTime =
-            currentTime;
-
-    }
-
-}
-
-// =====================================================
-// UPDATE
-// =====================================================
-
-function update() {
-
-    if (isGameOver) {
-        return;
-    }
-
-    const elapsed =
-        (Date.now() - startTime) / 1000;
-
-
-   // =================================================
-// LEVEL TRANSITION
-// =================================================
-
-if (isLevelTransition) {
-
-    // Timer เกมยังเดินต่อ
-    if (elapsed >= gameDuration) {
-
-        endGame();
-
-        return;
-
-    }
-
-    // ยังอยู่ในช่วงพัก
-    if (Date.now() < transitionEndTime) {
-
-        // ❗ไม่ขยับตุ่น
-        // ❗ไม่ spawn ตุ่น
-        return;
-
-    }
-
-    // =============================================
-    // หมดเวลา 3 วินาที
-    // =============================================
-
-    isLevelTransition = false;
-
-    lastSpawnTime = performance.now();
 
     return;
 }
 
-    // =================================================
-    // MOVE BLOCKS
-    // =================================================
 
-    for (
-        let i = blocks.length - 1;
-        i >= 0;
-        i--
-    ) {
+    /* =========================
+       Target
+    ========================= */
 
-        let b = blocks[i];
+    if (mole.dataset.type === "target") {
 
-        b.y += b.speed;
+        targetCaught++;
 
-
-        // collision
-        if (
-            b.y + b.size > player.y &&
-            b.x < player.x + player.width &&
-            b.x + b.size > player.x
-        ) {
-
-            if (b.type === "target") {
-
-                score += 10;
-
-                targetCaught++;
-
-                levelTargetCaught++;
-
-                const targetGoal = [
-
-                    10,  // Level 1
-                    25,  // Level 2
-                    35,  // Level 3
-                    45,  // Level 4
-                    70   // Level 5
-
-                ][level - 1];
-
-
-                // LEVEL UP
-              if (
-             levelTargetCaught >= targetGoal &&
-            !isLevelTransition
-            ) {
-
-    // ถ้าอยู่ Level 5 และผ่านเป้าหมาย → จบเกม
-    if (level === maxLevel) {
-
-        endGame();
-        return;
+        score += 10;
 
     }
 
-    // Level 1-4 → ขึ้น Level ถัดไป
-    startLevelTransition(level + 1);
-
-    return;
-}
-
-            }
-
-            else {
-
-                score -= 20;
-
-                distractorCaught++;
-
-                // นับการกดเขียวผิดใน Level นี้
-                levelDistractorCaught++;
-
-                }
-
-
-            blocks.splice(i, 1);
-
-            continue;
-
-        }
-
-
-        // ลบเมื่อตกพ้นจอ
-        if (b.y > canvas.height) {
-
-    if (b.type === "target") {
-        targetMissed++;
-    }
-
-    blocks.splice(i, 1);
-        }
-
-    }
-
-
-    // Game Over
-    if (elapsed >= gameDuration) {
-
-        endGame();
-
-    }
-
-}
-
-// =====================================================
-// DRAW
-// =====================================================
-
-function draw() {
-
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-
-    // =================================================
-    // PLAYER
-    // =================================================
-
-    ctx.fillStyle =
-        player.color;
-
-
-    ctx.fillRect(
-
-        player.x,
-
-        player.y,
-
-        player.width,
-
-        player.height
-
-    );
-
-
-    // =================================================
-    // BLOCKS
-    // =================================================
-
-    blocks.forEach(
-        b => {
-
-            ctx.fillStyle =
-
-                b.type ===
-                "target"
-
-                    ? getTargetColor()
-
-                    : getDistractorColor();
-
-
-            ctx.fillRect(
-
-                b.x,
-
-                b.y,
-
-                b.size,
-
-                b.size
-
-            );
-
-        }
-    );
-
-
-    // =================================================
-    // LEVEL
-    // =================================================
-
-    ctx.fillStyle =
-        "white";
-
-
-    ctx.font =
-        "bold 28px sans-serif";
-
-
-    ctx.textAlign =
-        "center";
-
-
-    ctx.fillText(
-
-        `LEVEL ${level}`,
-
-        canvas.width / 2,
-
-        50
-
-    );
-
-
-    // =================================================
-    // SCORE
-    // =================================================
-
-    ctx.font =
-        "bold 20px sans-serif";
-
-
-    ctx.textAlign =
-        "right";
-
-
-    ctx.fillText(
-
-        `Score: ${score}`,
-
-        canvas.width - 20,
-
-        50
-
-    );
-
-
-    // =================================================
-    // TIME
-    // =================================================
-
-    let timeLeft;
-
-
-    if (!gameStarted) {
-
-        timeLeft =
-            gameDuration;
-
-    }
+    /* =========================
+       Distractor
+    ========================= */
 
     else {
 
-        timeLeft =
+        distractorCaught++;
 
-            Math.max(
-
-                0,
-
-                gameDuration -
-                (
-                    Date.now() -
-                    startTime
-                ) / 1000
-
-            );
+        score -= 20;
 
     }
 
 
-    let m =
-        Math.floor(
-            timeLeft / 60
-        );
+    hitsDisplay.innerText = score;
 
+    mole.remove();
 
-    let s =
-        Math.floor(
-            timeLeft % 60
-        );
 
+    /* =========================
+       Check Level Up
+    ========================= */
 
-    ctx.fillText(
+    let nextLevel = level;
 
-        `Time: ${m}:${s < 10 ? '0' + s : s}`,
+    if (targetCaught >= 180) {
+        nextLevel = 5;
+    }
+    else if (targetCaught >= 120) {
+        nextLevel = 4;
+    }
+    else if (targetCaught >= 70) {
+        nextLevel = 3;
+    }
+    else if (targetCaught >= 30) {
+        nextLevel = 2;
+    }
 
-        canvas.width - 20,
 
-        85
+    if (nextLevel > level) {
 
-    );
+        startLevelTransition(nextLevel);
 
-
-    // =================================================
-    // ACCURACY
-    // =================================================
-
-    const accuracy =
-
-        levelTargetSpawned === 0
-
-            ? 0
-
-            :
-
-            (
-                levelTargetCaught /
-                levelTargetSpawned
-            ) * 100;
-
-
-    ctx.textAlign =
-        "left";
-
-
-    ctx.fillText(
-
-        `Accuracy: ${Math.round(accuracy)}%`,
-
-        20,
-
-        50
-
-    );
-
-// =================================================
-// FALSE POSITIVE
-// =================================================
-
-const falsePositive =
-
-    levelDistractorSpawned === 0
-
-        ? 0
-
-        :
-
-        (
-            levelDistractorCaught /
-            levelDistractorSpawned
-        ) * 100;
-
-
-ctx.fillText(
-
-    `False Positive: ${Math.round(falsePositive)}%`,
-
-    20,
-
-    80
-
-);
-
-
-    // =================================================
-    // LEVEL TRANSITION SCREEN
-    // =================================================
-
-   if (isLevelTransition) {
-
-    // พื้นหลังมืด
-    ctx.fillStyle =
-        "rgba(0, 0, 0, 0.75)";
-
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-
-    ctx.textAlign = "center";
-
-    ctx.fillStyle = "white";
-
-
-    // ==============================
-    // LEVEL
-    // ==============================
-
-    ctx.font =
-        "bold 38px sans-serif";
-
-    ctx.fillText(
-        `LEVEL ${transitionLevel}`,
-        canvas.width / 2,
-        canvas.height / 2 - 60
-    );
-
-
-    // ==============================
-    // MESSAGE
-    // ==============================
-
-    ctx.font =
-        "bold 20px sans-serif";
-
-    ctx.fillText(
-        "เตรียมตัวให้พร้อม",
-        canvas.width / 2,
-        canvas.height / 2 - 15
-    );
-
-
-    // ==============================
-    // COUNTDOWN
-    // ==============================
-
-    const now = Date.now();
-
-    const countdownEndTime =
-    transitionEndTime -
-    startMessageDuration;
-
-    const remaining =
-    countdownEndTime - now;
-
-    ctx.font =
-    "bold 58px sans-serif";
-
-    if (remaining > 0) {
-
-    const countdown =
-        Math.ceil(
-            remaining / 1000
-        );
-
-    ctx.fillText(
-        countdown,
-        canvas.width / 2,
-        canvas.height / 2 + 70
-    );
-
-    } else {
-
-    // แสดง "เริ่ม!" ค้าง
-    ctx.fillText(
-        "เริ่ม!",
-        canvas.width / 2,
-        canvas.height / 2 + 70
-    );
-
-}
-
-
-    ctx.textAlign = "left";
-
-}
-
-}
-
-// =====================================================
-// END GAME / GAME SUMMARY
-// =====================================================
-
-
-function endGame() {
-
-    // ป้องกันการเรียกซ้ำ
-    if (isGameOver) {
         return;
     }
 
-    isGameOver = true;
 
-    // หยุดตุ่นทั้งหมด
-    blocks = [];
+    updateDifficulty();
+}
 
-    // =========================================
-    // ACCURACY รวมทั้งเกม
-    // =========================================
+/* =========================
+   Lives
+========================= */
 
-    const finalAccuracy =
-    (targetSpawned + targetMissed + distractorCaught) === 0
-        ? 0
-        : Math.round(
-            (targetSpawned /
-            (targetSpawned + targetMissed + distractorCaught)) * 100
+function updateLives() {
+
+    const remaining =
+        Math.max(
+            0,
+            3 - mistakes
         );
 
-    // =========================================
-    // แสดงผลในหน้าสรุป
-    // =========================================
+
+    livesDisplay.innerHTML =
+        "❤️".repeat(remaining);
+}
+
+
+/* =========================
+   Game Over
+========================= */
+
+function endGame(msg) {
+
+    // หยุดเกมทันที
+    isGameOver = true;
+
+    clearInterval(gameInterval);
+    clearInterval(countdownInterval);
+
+    statusMsg.innerText = msg;
+
+   /* =========================
+   Accuracy ทั้งหมด
+========================= */
+
+const totalRed =
+    targetCaught +
+    targetMissed;
+
+const detection =
+    totalRed + distractorCaught === 0
+        ? 0
+        : Math.round(
+            (targetCaught /
+            (totalRed + distractorCaught)) * 100
+        );
 
     document.getElementById("final-level").innerText =
-        `Level : ${level}/${maxLevel}`;
+        `Level : ${level}/5`;
 
     document.getElementById("final-score").innerText =
         `Score : ${score}`;
@@ -1148,140 +539,411 @@ function endGame() {
     document.getElementById("final-green").innerText =
         `Target Caught : ${targetCaught}`;
 
+    document.getElementById("final-missed").innerText =
+        `Target Missed : ${targetMissed}`;
+
     document.getElementById("final-red").innerText =
         `Distractor Caught : ${distractorCaught}`;
 
-    document.getElementById("final-missed").innerText =
-    `Target Missed : ${targetMissed}`;    
-
     document.getElementById("final-accuracy").innerText =
-        `Accuracy : ${finalAccuracy}%`;
+        `Accuracy : ${detection}%`;
 
-    // =========================================
     // แสดงหน้าสรุป
-    // =========================================
-
     overlay.style.display = "flex";
 }
 
-// =====================================================
-// GAME LOOP
-// =====================================================
 
-function loop(currentTime) {
+/* =========================
+   Start Game
+========================= */
 
-    if (!gameStarted) {
+startBtn.addEventListener(
+    "click",
+    () => {
 
-        requestAnimationFrame(loop);
+        startPopup.style.display =
+            "none";
 
-        return;
+
+        overlay.style.display =
+            "none";
+
+
+        /*
+            Reset Game
+        */
+
+        score = 0;
+
+        level = 1;
+
+        targetSpawned = 0;
+        distractorSpawned = 0;
+
+        targetCaught = 0;
+        distractorCaught = 0;
+
+        targetMissed = 0;
+        mistakes = 0;
+
+        timeLeft = gameDuration;
+
+        isGameOver = false;
+
+
+        /*
+            อ่านค่าตาการฝึก
+        */
+
+        const selected =
+            document.querySelector(
+                'input[name="eye"]:checked'
+            );
+
+
+        if (selected) {
+
+            selectedEye =
+                selected.value;
+
+        }
+
+
+        /*
+            เริ่มเกม
+        */
+
+        init();
+
+        checkAllHoles();
 
     }
+);
 
-    // =========================================
-    // ถ้าอยู่ระหว่างพัก
-    // ห้าม spawn
-    // =========================================
 
-    if (!isLevelTransition) {
+/* =========================
+   Eye Selection
+========================= */
 
-        manageSpawning(currentTime);
+document
+    .querySelectorAll(
+        'input[name="eye"]'
+    )
+    .forEach(radio => {
 
-    }
+        radio.addEventListener(
+            "change",
+            () => {
 
-    update();
+                selectedEye =
+                    radio.value;
 
-    draw();
+            }
+        );
 
-    if (!isGameOver) {
+    });
 
-        requestAnimationFrame(loop);
 
-    }
+/* =========================
+   Red Slider
+========================= */
+
+if (contrastSlider) {
+
+    contrastSlider.addEventListener(
+        "input",
+        () => {
+
+            targetContrast =
+                Number(
+                    contrastSlider.value
+                );
+
+
+            contrastValue.innerText =
+                `${targetContrast}%`;
+
+
+            updatePreview();
+
+        }
+    );
+
+}
+
+/* =========================
+   Level Countdown
+========================= */
+
+let levelCountdown = document.createElement("div");
+
+levelCountdown.id = "level-countdown";
+
+levelCountdown.style.position = "fixed";
+levelCountdown.style.top = "0";
+levelCountdown.style.left = "0";
+levelCountdown.style.width = "100%";
+levelCountdown.style.height = "100%";
+
+levelCountdown.style.display = "none";
+levelCountdown.style.alignItems = "center";
+levelCountdown.style.justifyContent = "center";
+
+levelCountdown.style.background = "rgba(0,0,0,0.75)";
+levelCountdown.style.zIndex = "9999";
+
+levelCountdown.style.fontSize = "80px";
+levelCountdown.style.fontWeight = "bold";
+levelCountdown.style.color = "white";
+
+document.body.appendChild(levelCountdown);
+/* =========================
+   Level Transition
+========================= */
+
+function startLevelTransition(nextLevel) {
+
+    isLevelTransition = true;
+
+    clearInterval(gameInterval);
+
+    /* =========================
+       เอาตุ่นที่เหลือออก
+    ========================= */
+
+    holes.forEach(hole => {
+
+        const mole = hole.querySelector(".mole");
+
+        if (mole) {
+            mole.remove();
+        }
+
+    });
+
+
+    /* =========================
+       แสดง Level ใหม่
+    ========================= */
+
+    level = nextLevel;
+
+    levelDisplay.innerText =
+        "Level " + level;
+
+
+    /* =========================
+       แสดง Countdown
+       Level 2
+       3
+       2
+       1
+    ========================= */
+
+    levelCountdown.style.display = "flex";
+
+
+    /* แสดง Level 2 */
+
+    levelCountdown.innerText =
+        `Level ${nextLevel}`;
+
+
+    /* หลังจาก 1 วินาที → 3 */
+
+    transitionTimeout = setTimeout(() => {
+
+        levelCountdown.innerText = "3";
+
+
+        /* หลังจากอีก 1 วินาที → 2 */
+
+        transitionTimeout = setTimeout(() => {
+
+            levelCountdown.innerText = "2";
+
+
+            /* หลังจากอีก 1 วินาที → 1 */
+
+            transitionTimeout = setTimeout(() => {
+
+                levelCountdown.innerText = "1";
+
+
+                /* หลังจากอีก 1 วินาที → เริ่มเกม */
+
+                transitionTimeout = setTimeout(() => {
+
+                    levelCountdown.style.display = "none";
+
+                    isLevelTransition = false;
+
+
+                    /* ตั้งค่าความยากของ Level ใหม่ */
+
+                    updateDifficulty();
+
+
+                    /* สร้างตุ่น */
+
+                    checkAllHoles();
+
+                }, 1000);
+
+            }, 1000);
+
+        }, 1000);
+
+    }, 1000);
+}
+
+/* =========================
+   Green Slider
+========================= */
+
+if (greenSlider) {
+
+    greenSlider.addEventListener(
+        "input",
+        () => {
+
+            distractorContrast =
+                Number(
+                    greenSlider.value
+                );
+
+
+            greenValue.innerText =
+                `${distractorContrast}%`;
+
+
+            updatePreview();
+
+        }
+    );
 
 }
 
 
-// =====================================================
-// INIT
-// =====================================================
+/* =========================
+   Preview
+========================= */
 
-init();
+function updatePreview() {
+
+    if (targetPreview) {
+
+        targetPreview.style
+            .backgroundColor =
+            getTargetColor();
+
+    }
 
 
-window.addEventListener(
-    "resize",
-    init
+    if (distractorPreview) {
+
+        distractorPreview.style
+            .backgroundColor =
+            getDistractorColor();
+
+    }
+}
+
+
+/* =========================
+   Initial Preview
+========================= */
+
+if (contrastSlider) {
+
+    targetContrast =
+        Number(
+            contrastSlider.value
+        );
+
+}
+
+
+if (greenSlider) {
+
+    distractorContrast =
+        Number(
+            greenSlider.value
+        );
+
+}
+
+
+if (contrastValue) {
+
+    contrastValue.innerText =
+        `${targetContrast}%`;
+
+}
+
+
+if (greenValue) {
+
+    greenValue.innerText =
+        `${distractorContrast}%`;
+
+}
+
+
+updatePreview();
+
+
+/* =========================
+   Hole Events
+========================= */
+
+holes.forEach(hole => {
+
+    hole.addEventListener(
+        "mousedown",
+        handleWhack
+    );
+
+
+    hole.addEventListener(
+        "touchstart",
+        event => {
+
+            event.preventDefault();
+
+            handleWhack.call(hole);
+
+        },
+        { passive: false }
+    );
+
+});
+
+
+/* =========================
+   Restart
+========================= */
+
+restartBtn.addEventListener(
+    "click",
+    () => {
+
+        location.reload();
+
+    }
 );
 
 
-// =====================================================
-// START BUTTON
-// =====================================================
+/* =========================
+   Main Menu
+========================= */
 
-document
-    .getElementById(
-        "start-btn"
-    )
-    .addEventListener(
-        "click",
-        () => {
+homeBtn.addEventListener(
+    "click",
+    () => {
 
+        window.location.href =
+            "../index.html";
 
-            document.getElementById(
-                "start-popup"
-            ).style.display =
-                "none";
-
-
-            startTime =
-                Date.now();
-
-
-            gameStarted =
-                true;
-
-
-            requestAnimationFrame(
-                loop
-            );
-
-        }
-    );
-
-
-// =====================================================
-// RESTART
-// =====================================================
-
-document
-    .getElementById(
-        "restart-btn"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            location.reload();
-
-        }
-    );
-
-
-// =====================================================
-// HOME
-// =====================================================
-
-document
-    .getElementById(
-        "home-btn"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            window.location.href =
-                "../index.html";
-
-        }
-    );
+    }
+);
