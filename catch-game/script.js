@@ -1156,14 +1156,12 @@ function endGame() {
     // ACCURACY รวมทั้งเกม
     // =========================================
 
-    const totalTargetResponses =
-    targetCaught + targetMissed;
-
     const finalAccuracy =
-    totalTargetResponses === 0
+    (targetSpawned + targetMissed + distractorCaught) === 0
         ? 0
         : Math.round(
-            (targetCaught / totalTargetResponses) * 100
+            (targetSpawned /
+            (targetSpawned + targetMissed + distractorCaught)) * 100
         );
 
     // =========================================
@@ -1186,7 +1184,7 @@ function endGame() {
     `Target Missed : ${targetMissed}`;    
 
     document.getElementById("final-accuracy").innerText =
-        `Target Detection : ${finalAccuracy}%`;
+        `Accuracy : ${finalAccuracy}%`;
 
     // =========================================
     // แสดงหน้าสรุป
