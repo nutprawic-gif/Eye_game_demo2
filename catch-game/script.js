@@ -148,14 +148,10 @@ function getNextType() {
 // =====================================================
 
 const slider =
-    document.getElementById(
-        "contrast-slider"
-    );
+    document.getElementById("contrast-slider");
 
 const value =
-    document.getElementById(
-        "contrast-value"
-    );
+    document.getElementById("contrast-value");
 
 let contrast = 100;
 
@@ -165,9 +161,7 @@ slider.addEventListener(
     () => {
 
         contrast =
-            Number(
-                slider.value
-            );
+            Number(slider.value);
 
         value.innerText =
             contrast + "%";
@@ -180,15 +174,11 @@ slider.addEventListener(
 
 function getTargetColor() {
 
-    const r =
-        Math.round(
-            30 +
-            (contrast / 100) *
-            225
-        );
+    const r = Math.round(
+        30 + (contrast / 100) * 225
+    );
 
     return `rgb(${r},0,0)`;
-
 }
 
 
@@ -197,14 +187,10 @@ function getTargetColor() {
 // =====================================================
 
 const greenSlider =
-    document.getElementById(
-        "green-slider"
-    );
+    document.getElementById("green-slider");
 
 const greenValue =
-    document.getElementById(
-        "green-value"
-    );
+    document.getElementById("green-value");
 
 let greenContrast = 100;
 
@@ -214,9 +200,7 @@ greenSlider.addEventListener(
     () => {
 
         greenContrast =
-            Number(
-                greenSlider.value
-            );
+            Number(greenSlider.value);
 
         greenValue.innerText =
             greenContrast + "%";
@@ -229,15 +213,11 @@ greenSlider.addEventListener(
 
 function getDistractorColor() {
 
-    const g =
-        Math.round(
-            30 +
-            (greenContrast / 100) *
-            225
-        );
+    const g = Math.round(
+        30 + (greenContrast / 100) * 225
+    );
 
     return `rgb(0,${g},0)`;
-
 }
 
 
@@ -719,15 +699,6 @@ if (isLevelTransition) {
 
                 levelTargetCaught++;
 
-                const accuracy =
-                    levelTargetSpawned === 0
-                        ? 0
-                        : (
-                            levelTargetCaught /
-                            levelTargetSpawned
-                        ) * 100;
-
-
                 const targetGoal = [
 
                     10,  // Level 1
@@ -1153,17 +1124,20 @@ function endGame() {
     blocks = [];
 
     // =========================================
-    // ACCURACY รวมทั้งเกม
-    // =========================================
+// ACCURACY รวมทั้งเกม
+// =========================================
 
-    const finalAccuracy =
-    (targetSpawned + targetMissed + distractorCaught) === 0
+const totalAttempts =
+    targetCaught +
+    targetMissed +
+    distractorCaught;
+
+const finalAccuracy =
+    totalAttempts === 0
         ? 0
         : Math.round(
-            (targetSpawned /
-            (targetSpawned + targetMissed + distractorCaught)) * 100
+            (targetCaught / totalAttempts) * 100
         );
-
     // =========================================
     // แสดงผลในหน้าสรุป
     // =========================================
